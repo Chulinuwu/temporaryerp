@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+body { font-family: 'Yu Gothic', 'Meiryo', 'Noto Sans Thai', Arial, sans-serif; font-size: 11pt; line-height: 1.55; }
+h1 { color: #0D47A1; border-bottom: 2px solid #1976D2; padding-bottom: 4px; font-size: 22pt; }
+h2 { color: #1565C0; border-bottom: 1px solid #90CAF9; padding-bottom: 2px; font-size: 16pt; margin-top: 18pt; }
+h3 { color: #1976D2; font-size: 13pt; margin-top: 14pt; }
+h4 { color: #1976D2; font-size: 12pt; margin-top: 12pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+th, td { border: 1px solid #BDBDBD; padding: 6px 10px; font-size: 10pt; }
+th { background: #E3F2FD; color: #0D47A1; text-align: left; }
+code { font-family: Consolas, monospace; background: #F5F5F5; padding: 1px 4px; font-size: 9.5pt; }
+pre { background: #263238; color: #ECEFF1; padding: 10px 14px; font-family: Consolas, monospace; font-size: 9.5pt; border-left: 3px solid #1976D2; white-space: pre-wrap; }
+hr { border: none; border-top: 1px dashed #BDBDBD; margin: 16pt 0; }
+li { margin-left: 20pt; }
+</style></head><body><h1>PEGASUS ERP — คู่มือการใช้งาน v2.0 (ภาษาไทย)</h1>
+
+ระบบ ERP สำหรับ Tomas Tech Co., Ltd.
+อัปเดตล่าสุด: 2026-04-17
+
+<hr>
+
+<h2>สารบัญ</h2>
+1. ภาพรวมระบบ
+2. เข้าสู่ระบบและแดชบอร์ด
+3. โมดูลฝ่ายขาย
+4. โมดูลจัดซื้อ
+5. โมดูลบัญชี / AR / AP
+6. จัดการมาสเตอร์
+7. สิทธิ์และบันทึกการเปลี่ยนแปลง
+8. แดชบอร์ดวิเคราะห์
+9. ตำแหน่งไฟล์
+10. การแก้ปัญหา
+
+<hr>
+
+<h2>1. ภาพรวมระบบ</h2>
+
+<li><strong>Backend</strong>: PHP 8.2+ / PostgreSQL 15+</li>
+<li><strong>Frontend</strong>: PHP template + Chart.js + Tesseract.js (OCR)</li>
+<li><strong>หลายภาษา</strong>: 日本語 / English / ไทย</li>
+<li><strong>Authentication</strong>: Session + Role + Permission master</li>
+
+<hr>
+
+<h2>2. เข้าสู่ระบบและแดชบอร์ด</h2>
+
+<li>URL: <code>http://<server>:8080/login</code></li>
+<li>เริ่มต้น: admin / admin123 (เปลี่ยนทันทีหลังล็อกอินครั้งแรก)</li>
+<li>Dashboard: KPI cards (เงินสด, รับ, จ่าย, pipeline, พยากรณ์) + กราฟ Cash Flow + Sales Forecast + Pipeline + ลูกค้าหลัก</li>
+
+<hr>
+
+<h2>3. โมดูลฝ่ายขาย</h2>
+
+<h3>3.1 การจัดการลูกค้า (Sales → การจัดการลูกค้า)</h3>
+<strong>ใหม่</strong>: รายชื่อลูกค้าเชิงฝ่ายขาย แสดงจำนวนผู้ติดต่อ / ดีล / pipeline / ติดต่อล่าสุด
+<li>หน้ารายละเอียด → <strong>OCR นามบัตร</strong> (Tesseract.js)</li>
+  1. อัปโหลดรูปนามบัตร
+  2. กด "OCR Read"
+  3. ตรวจสอบข้อมูลที่สกัด (ชื่อ/บริษัท/โทร/เมล) แล้วบันทึก
+<li>รูปจะถูกบีบอัดอัตโนมัติ (สูงสุด 1200px, JPEG 85%) + thumbnail (สูงสุด 400px)</li>
+
+<h3>3.2 การจัดการดีล (Sales → ดีล)</h3>
+<strong>ใหม่</strong>: ตัวกรองขยาย
+<li>ลูกค้า (dropdown)</li>
+<li>สถานะ (21 ขั้น: Lead Identified ~ Closed Won)</li>
+<li>ผู้ขาย</li>
+<li>ชื่อดีล (บางส่วน)</li>
+<li>จำนวนเงิน min~max</li>
+<li>โอกาส (0~100%)</li>
+<li>ค้นหาอิสระ (Deal No / PJ No)</li>
+
+หน้าจอแก้ไข:
+<li><strong>อัตรากำไรประเมิน (%)</strong> คำนวณอัตโนมัติจากหมวดโซลูชัน</li>
+  <li>IT = 100% / OT, FA = 10% / Hardware, License, Other = 0%</li>
+<li><strong>โครงการที่เกี่ยวข้อง</strong> เลือกจากรายการคำสั่งขาย</li>
+<li><strong>ชื่อผู้ขาย</strong> ยกเลิก (รวมกับ dropdown ผู้ขาย)</li>
+
+<h3>3.3 Activity Log</h3>
+<strong>ใหม่</strong>: ฟิลด์บังคับเพิ่มเติม
+<li><strong>ผู้ติดต่อ</strong> (บังคับ, เลือกจากมาสเตอร์ผู้ติดต่อลูกค้า)</li>
+<li><strong>เวลาเริ่ม / เวลาสิ้นสุด</strong> → ระยะเวลาคำนวณอัตโนมัติ</li>
+<li><strong>บันทึกประชุม</strong> (เดิม: คำอธิบาย)</li>
+<li><strong>การกระทำถัดไป / วันที่</strong> (บังคับ)</li>
+
+<h3>3.4 ใบเสนอราคา</h3>
+<li>สร้างใหม่ → <strong>วันหมดอายุ = วันออก + 1 เดือน</strong> อัตโนมัติ</li>
+<li>Multi-step approval (Draft → Internal Review → Manager → Director)</li>
+<li>PDF แสดงชื่อและตราประทับผู้อนุมัติ</li>
+<li>เงื่อนไขการชำระเงินดึงจาก <code>payment_term_installments</code> พร้อม % และ EN description</li>
+
+<h3>3.5 ลงทะเบียนคำสั่งขาย</h3>
+<strong>ใหม่</strong>:
+<li>แปลงจากดีล → ป้องกันลงซ้ำอัตโนมัติ</li>
+<li>สถานะรวมเป็น 3 ค่าเท่านั้น:</li>
+  <li><code>CONFIRMED</code> (ลงทะเบียน)</li>
+  <li><code>INVOICED</code> (อัตโนมัติเมื่อออกใบแจ้งหนี้ AR)</li>
+  <li><code>CANCELLED</code></li>
+<li><strong>ปุ่มยกเลิกเฉพาะผู้ดูแลระบบ</strong></li>
+
+<hr>
+
+<h2>4. โมดูลจัดซื้อ</h2>
+
+<h3>4.1 รายการใบสั่งซื้อ</h3>
+<strong>ใหม่</strong>: ตัวกรองขยาย — สถานะ, ผู้จัดจำหน่าย dropdown, ช่วงวันที่, ค้นหาอิสระ
+
+<h3>4.2 สร้างใบสั่งซื้อ</h3>
+<li>เลือกผู้จัดจำหน่าย → สินค้า → จำนวน/ราคา → VAT อัตโนมัติ</li>
+<li>PDF ใบสั่งซื้อที่อนุมัติแล้วแสดงตราประทับ</li>
+
+<hr>
+
+<h2>5. โมดูลบัญชี / AR / AP</h2>
+
+<h3>5.1 ใบแจ้งหนี้ AR <strong>ใหม่</strong></h3>
+<li>ส่วนหัว: <strong>เลือกจากคำสั่งขาย</strong> dropdown</li>
+  <li>โหลด → ลูกค้า / รายการ / <strong>เงื่อนไขชำระ</strong> / <strong>วันครบกำหนด</strong> เติมอัตโนมัติ</li>
+  <li>วันครบกำหนด = วันที่ใบแจ้งหนี้ + Credit Days</li>
+<li><strong>เงื่อนไขชำระล็อกจากใบเสนอราคา</strong> (เฉพาะผู้ดูแลระบบแก้ไขได้)</li>
+<li>บันทึก → สถานะคำสั่งขายเปลี่ยนเป็น <code>INVOICED</code> อัตโนมัติ</li>
+<li>หน้ารายละเอียด: สรุปยอด / รายการ / ประวัติการชำระ / ดาวน์โหลด PDF</li>
+
+<h3>5.2 ใบแจ้งหนี้ AP</h3>
+<li>สร้างจากใบสั่งซื้อหรือกรอกด้วยตนเอง</li>
+
+<h3>5.3 การรับชำระเงิน</h3>
+<li>บันทึกการชำระแบบบางส่วน / จัดสรรให้ใบแจ้งหนี้หลายใบ</li>
+
+<hr>
+
+<h2>6. การจัดการมาสเตอร์</h2>
+
+| มาสเตอร์ | เนื้อหา |
+|----------|---------|
+| ลูกค้า | CUS-XXXX (ห้ามซ้ำ) / 3 ภาษา / ผู้ติดต่อ + นามบัตร |
+| ผู้จัดจำหน่าย | SUP-XXXX / อัตรา WHT |
+| สินค้า | ITM-XXXX / เวอร์ชันตามช่วงเวลา |
+| ผังบัญชี | ตาม TFRS |
+| เงื่อนไขชำระ | รองรับงวด (เช่น 50% DP + 40% Install + 10% HO, Net30 ละงวด) |
+| ธนาคาร | CRUD |
+| ฝ่าย / แผนก | 3 ภาษา (13 แผนก) |
+| หมวดโซลูชัน | <strong>ใหม่</strong>: 32 รายการ + กลุ่ม (IT/OT/FA/HW/License/Other) + อัตรากำไรประเมิน |
+| สถานะดีล | 21 รายการ |
+| <strong>อัตราแลกเปลี่ยน</strong> | <strong>ใหม่</strong>: 16 สกุลเงินข้ามกัน, ช่วงวันที่, สร้างอัตรากลับอัตโนมัติ |
+| <strong>สิทธิ์การใช้งาน</strong> | <strong>ใหม่ (admin)</strong>: เมทริกซ์ checkbox |
+| <strong>บันทึกเปลี่ยนแปลง</strong> | <strong>ใหม่ (admin)</strong>: ประวัติการเปลี่ยนแปลงทั้งระบบ |
+
+<hr>
+
+<h2>7. สิทธิ์และบันทึกเปลี่ยนแปลง</h2>
+
+<h3>7.1 สิทธิ์การใช้งาน (admin)</h3>
+<li>มาสเตอร์ → สิทธิ์การใช้งาน</li>
+<li>Role × Permission checkbox matrix</li>
+<li>ADMIN role เปิดทั้งหมดโดยบังคับ</li>
+
+<h3>7.2 บันทึกการเปลี่ยนแปลง (admin)</h3>
+<li>มาสเตอร์ → บันทึกการเปลี่ยนแปลง</li>
+<li>Filter: ตาราง / การกระทำ / ผู้ใช้ / ช่วงวันที่ / ค้นหา</li>
+<li>หน้ารายละเอียดแสดง <strong>ค่าเดิม vs ค่าใหม่</strong> (แถวเปลี่ยนแปลง = พื้นหลังเหลือง)</li>
+
+<hr>
+
+<h2>8. แดชบอร์ดวิเคราะห์</h2>
+
+<h3>8.1 ใบเสนอราคา</h3>
+<li>KPI: จำนวน / ยอดรวม / ชนะ / ยอดชนะ</li>
+<li>กราฟ: ตามความน่าจะเป็น / โซลูชัน / เดือน</li>
+<li>ลูกค้า Top 15</li>
+
+<h3>8.2 ใบสั่งซื้อ</h3>
+<li>KPI: จำนวน / ยอดรวม / จำนวนผู้จัดจำหน่าย</li>
+<li>กราฟ: สถานะ / เดือน</li>
+<li>ผู้จัดจำหน่าย Top 15</li>
+
+<hr>
+
+<h2>9. ตำแหน่งไฟล์</h2>
+
+| ประเภท | Path |
+|--------|------|
+| Source | <code>Pegasus_ERP_R1/</code> |
+| DB credentials | <code>config/credentials/database_connection.txt</code> |
+| Backups | <code>backups/pegasus_erp_YYYYMMDD_HHMMSS.{sql,dump}</code> |
+| นามบัตร | <code>public/uploads/business_cards/</code> |
+| บริการ Windows | <code>service/install-postgres-service.bat</code> |
+
+<hr>
+
+<h2>10. การแก้ปัญหา</h2>
+
+| อาการ | วิธีแก้ |
+|-------|---------|
+| เข้าสู่ระบบไม่ได้ | ตรวจตาราง <code>users</code>, รีเซ็ตรหัสผ่านด้วย <code>database/reset_passwords.php</code> |
+| PDF ว่างเปล่า | ตรวจ console, ตรวจโลโก้, เปิด GD/fileinfo extension |
+| OCR ไม่ทำงาน | ตรวจอินเทอร์เน็ต (CDN), ตรวจ Tesseract error ใน console |
+| ภาษาไทยเพี้ยน | encoding DB = UTF8, เปิด mbstring |
+| 500 error | ตรวจ PHP error log |
+| SQLSTATE[25P02] | transaction ก่อนหน้าล้มเหลว; รีสตาร์ทเซิร์ฟเวอร์ |
+| รหัสลูกค้าซ้ำ | ถูกบล็อกโดย <code>uniq_customer_code_active</code> |
+
+<hr>
+
+© 2026 Tomas Tech Co., Ltd. — PEGASUS ERP v3.1
+</body></html>

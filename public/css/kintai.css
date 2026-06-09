@@ -1,0 +1,477 @@
+/* ============================================================
+   PEGASUS ERP - Kintai (Attendance Portal) Stylesheet
+   JobCan-inspired layout
+   ============================================================ */
+
+:root {
+    --kt-primary: #00BCD4;
+    --kt-primary-dark: #0097A7;
+    --kt-primary-light: #B2EBF2;
+    --kt-sidebar-bg: #5A5A5A;
+    --kt-sidebar-hover: #4A4A4A;
+    --kt-sidebar-active: #3F3F3F;
+    --kt-sidebar-text: #FFFFFF;
+    --kt-content-bg: #F5F5F5;
+    --kt-card-bg: #FFFFFF;
+    --kt-border: #E0E0E0;
+    --kt-text: #333333;
+    --kt-text-muted: #757575;
+    --kt-required: #E53935;
+    --kt-header-h: 80px;
+    --kt-sidebar-w: 200px;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body.kt-body {
+    font-family: 'Roboto', 'Noto Sans JP', 'Noto Sans Thai', Meiryo, sans-serif;
+    font-size: 13px;
+    background: var(--kt-content-bg);
+    color: var(--kt-text);
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+/* ---------- Top Header ---------- */
+.kt-header {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--kt-header-h);
+    background: var(--kt-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px 0 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.kt-logo {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: #FFFFFF;
+    height: 100%;
+    padding: 0 40px 0 24px;
+    min-width: var(--kt-sidebar-w);
+    box-sizing: border-box;
+}
+
+.kt-logo-main {
+    font-size: 30px;
+    font-weight: 900;
+    color: #00BCD4;
+    letter-spacing: -1px;
+    line-height: 1;
+    padding-bottom: 18px;
+}
+
+.kt-logo-sub {
+    font-size: 11px;
+    color: #9E9E9E;
+    font-weight: 400;
+    padding-bottom: 22px;
+}
+
+.kt-header-user {
+    color: #FFFFFF;
+    text-align: right;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.kt-header-user a {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.kt-header-user .u-name { font-size: 13px; font-weight: 500; }
+
+/* ---------- Sidebar ---------- */
+.kt-sidebar {
+    position: fixed;
+    top: var(--kt-header-h);
+    bottom: 0;
+    left: 0;
+    width: var(--kt-sidebar-w);
+    background: var(--kt-sidebar-bg);
+    overflow-y: auto;
+    z-index: 90;
+}
+
+.kt-sidebar-close {
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px 16px 0;
+    color: rgba(255,255,255,.8);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.kt-sidebar-close:hover { color: #FFFFFF; }
+
+.kt-sidebar-menu { list-style: none; padding: 14px 0 0; margin: 0; }
+
+.kt-sidebar-menu > li { position: relative; }
+
+.kt-sidebar-menu a,
+.kt-sidebar-menu .kt-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    color: var(--kt-sidebar-text);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background .15s;
+    cursor: pointer;
+}
+
+.kt-sidebar-menu a:hover,
+.kt-sidebar-menu .kt-menu-item:hover {
+    background: var(--kt-sidebar-hover);
+    text-decoration: none;
+}
+
+.kt-sidebar-menu .active > a,
+.kt-sidebar-menu .active > .kt-menu-item {
+    background: var(--kt-sidebar-active);
+}
+
+.kt-sidebar-menu .has-sub > a::after,
+.kt-sidebar-menu .has-sub > .kt-menu-item::after {
+    content: "›";
+    margin-left: auto;
+    font-size: 18px;
+    opacity: .7;
+}
+
+.kt-sidebar-menu .has-sub.active > a::after,
+.kt-sidebar-menu .has-sub.active > .kt-menu-item::after {
+    transform: rotate(90deg);
+}
+
+.kt-sidebar-menu .kt-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: rgba(0,0,0,.18);
+    display: none;
+}
+
+.kt-sidebar-menu .has-sub.open .kt-submenu { display: block; }
+
+.kt-sidebar-menu .kt-submenu a {
+    padding-left: 50px;
+    font-size: 12.5px;
+}
+
+.kt-menu-icon {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+    opacity: .95;
+}
+
+/* ---------- Main Content ---------- */
+.kt-main {
+    margin-left: var(--kt-sidebar-w);
+    padding: calc(var(--kt-header-h) + 24px) 32px 60px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.kt-page-title {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0 0 20px;
+    color: #222;
+}
+
+/* ---------- Language Switcher ---------- */
+.kt-lang {
+    position: fixed;
+    bottom: 10px;
+    left: 12px;
+    z-index: 90;
+}
+
+.kt-lang select {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid #B0B0B0;
+    background: #FFFFFF;
+    border-radius: 2px;
+}
+
+/* ---------- Card / Form ---------- */
+.kt-card {
+    background: var(--kt-card-bg);
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+.kt-card + .kt-card { margin-top: 16px; }
+
+.kt-card-body { padding: 28px 32px; }
+
+.kt-card-footer {
+    padding: 14px 24px;
+    background: #F8F8F8;
+    border-top: 1px solid var(--kt-border);
+    text-align: right;
+}
+
+/* Form rows (label left, control right) */
+.kt-form-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.kt-form-row:last-child { margin-bottom: 0; }
+
+.kt-form-label {
+    width: 140px;
+    flex-shrink: 0;
+    padding: 7px 16px 0 0;
+    text-align: right;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.3;
+}
+
+.kt-form-label .req {
+    display: block;
+    color: var(--kt-required);
+    font-weight: 700;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.kt-form-control { flex: 1; min-width: 0; }
+
+.kt-form-hint {
+    display: inline-block;
+    margin-left: 8px;
+    color: var(--kt-required);
+    font-size: 12px;
+}
+
+/* Inputs */
+.kt-input, .kt-select, .kt-textarea {
+    box-sizing: border-box;
+    padding: 7px 10px;
+    font-size: 13px;
+    border: 1px solid #B8B8B8;
+    background: #FFFFFF;
+    border-radius: 2px;
+    font-family: inherit;
+    color: #333;
+}
+.kt-input:focus, .kt-select:focus, .kt-textarea:focus {
+    outline: none;
+    border-color: var(--kt-primary);
+    box-shadow: 0 0 0 2px rgba(0,188,212,.18);
+}
+.kt-textarea { width: 100%; min-height: 100px; resize: vertical; }
+
+/* Select spinner-like (year/month/day/hour/min) */
+.kt-spinner {
+    display: inline-block;
+    padding: 4px 4px 4px 8px;
+    font-size: 13px;
+    border: 1px solid #B8B8B8;
+    background: #FFFFFF;
+    border-radius: 2px;
+    min-width: 58px;
+    cursor: pointer;
+}
+
+.kt-date-group, .kt-time-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kt-date-group .unit, .kt-time-group .unit {
+    font-size: 13px;
+    color: #333;
+    margin: 0 6px 0 2px;
+}
+
+.kt-icon-btn {
+    background: transparent;
+    border: 1px solid #B8B8B8;
+    border-radius: 2px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #555;
+}
+
+.kt-icon-btn:hover { background: #F0F0F0; }
+
+.kt-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    margin-top: 6px;
+    cursor: pointer;
+}
+
+/* ---------- Buttons ---------- */
+.kt-btn {
+    display: inline-block;
+    padding: 7px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    line-height: 1.4;
+    transition: background .15s;
+}
+
+.kt-btn-primary {
+    background: var(--kt-primary);
+    color: #FFFFFF;
+    border-color: var(--kt-primary-dark);
+}
+.kt-btn-primary:hover { background: var(--kt-primary-dark); color: #FFF; text-decoration: none; }
+
+.kt-btn-outline {
+    background: #FFFFFF;
+    color: var(--kt-primary);
+    border: 1px solid var(--kt-primary);
+}
+.kt-btn-outline:hover { background: #E0F7FA; }
+
+.kt-btn-gray {
+    background: #FAFAFA;
+    color: #444;
+    border: 1px solid #C0C0C0;
+}
+.kt-btn-gray:hover { background: #F0F0F0; }
+
+/* ---------- Filter bar ---------- */
+.kt-filter {
+    padding: 22px 28px;
+    background: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+
+.kt-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.kt-filter-row:last-child { margin-bottom: 0; }
+
+.kt-filter-row label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    min-width: 88px;
+}
+
+.kt-filter-actions { text-align: right; margin-top: 16px; }
+
+/* ---------- Data table ---------- */
+.kt-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF;
+    font-size: 13px;
+}
+
+.kt-table th {
+    background: #F5F5F5;
+    color: #555;
+    font-weight: 500;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--kt-border);
+}
+
+.kt-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--kt-border);
+    color: #333;
+}
+
+.kt-table tbody tr:hover { background: #FAFAFA; }
+
+.kt-note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* ---------- Page header action row ---------- */
+.kt-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+/* ---------- Definition list (profile / settings) ---------- */
+.kt-dl {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 14px 24px;
+    padding: 10px 0;
+}
+
+.kt-dl dt {
+    text-align: right;
+    padding-top: 7px;
+    color: #555;
+    font-weight: 400;
+}
+
+.kt-dl dd {
+    margin: 0;
+    padding-top: 7px;
+    color: #333;
+}
+
+.kt-dl dd a { color: var(--kt-primary); text-decoration: underline; }
+
+/* ---------- Footer ---------- */
+.kt-footer {
+    position: fixed;
+    bottom: 0;
+    left: var(--kt-sidebar-w);
+    right: 0;
+    padding: 14px 0;
+    background: #333;
+    color: #CCC;
+    text-align: center;
+    font-size: 11px;
+    z-index: 50;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+    :root { --kt-sidebar-w: 0px; }
+    .kt-sidebar { transform: translateX(-100%); transition: transform .2s; }
+    .kt-sidebar.open { transform: translateX(0); width: 200px; }
+    .kt-main { padding-left: 16px; padding-right: 16px; }
+    .kt-footer { left: 0; }
+    .kt-form-label { width: 110px; padding-right: 10px; font-size: 12px; }
+    .kt-logo { padding: 0 16px; min-width: auto; }
+    .kt-logo-main { font-size: 22px; padding-bottom: 14px; }
+    .kt-logo-sub { display: none; }
+}

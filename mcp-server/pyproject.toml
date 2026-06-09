@@ -1,0 +1,22 @@
+[project]
+name = "pegasus-mcp"
+version = "0.1.0"
+description = "MCP server for PEGASUS ERP — exposes customer/quotation/KPI/ops tools to Claude Code"
+authors = [{ name = "R.Nozaki", email = "nozaki.ryo@tomastc.com" }]
+requires-python = ">=3.10"
+dependencies = [
+  "mcp>=1.2.0",
+  "psycopg[binary]>=3.1.0",
+  "python-dotenv>=1.0.0",
+  "httpx>=0.27.0",
+]
+
+[project.scripts]
+pegasus-mcp = "pegasus_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

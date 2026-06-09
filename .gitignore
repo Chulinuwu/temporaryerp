@@ -1,0 +1,23 @@
+# --- Secrets / credentials (DO NOT COMMIT) ---
+config/credentials/
+**/.env
+mcp-server/.env
+
+# --- Python ---
+**/.venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Local editor / tooling ---
+.claude/
+.vscode/
+.idea/
+
+# --- Scratch, import-state & customer data dumps ---
+_*.json
+
+# --- Logs / temp ---
+*.log
+*.tmp

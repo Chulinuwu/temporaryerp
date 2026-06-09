@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>PEGASUS ERP - Header Design Preview (10 案)</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+        background: #F0F2F5;
+        color: #424242;
+        padding: 24px;
+        line-height: 1.5;
+    }
+    h1 {
+        font-size: 22px;
+        margin-bottom: 8px;
+        color: #1565C0;
+    }
+    .intro {
+        color: #616161;
+        font-size: 13px;
+        margin-bottom: 24px;
+    }
+    .design-card {
+        background: #fff;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .design-header {
+        padding: 14px 20px;
+        background: #FAFAFA;
+        border-bottom: 1px solid #E0E0E0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .design-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1976D2;
+    }
+    .design-desc {
+        font-size: 12px;
+        color: #757575;
+        margin-top: 2px;
+    }
+    .design-num {
+        background: #1976D2;
+        color: #fff;
+        width: 28px;
+        height: 28px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    /* Mock navbar container */
+    .mock-navbar {
+        height: 48px;
+        background: #1976D2;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+    }
+    .mock-left { display: flex; align-items: center; gap: 8px; }
+    .mock-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 12px;
+    }
+    .mock-avatar {
+        width: 32px; height: 32px; border-radius: 16px;
+        background: #fff; color: #1976D2;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px;
+    }
+
+    /* ============ Design 1: Current (logo only) ============ */
+    .d1-logo img { height: 32px; width: auto; }
+
+    /* ============ Design 2: Logo + PEGASUS ERP text ============ */
+    .d2 img { height: 30px; }
+    .d2-text { font-size: 17px; font-weight: 700; letter-spacing: 1.5px; margin-left: 4px; }
+
+    /* ============ Design 3: Logo on white card ============ */
+    .d3-card {
+        background: #fff;
+        padding: 4px 14px 4px 10px;
+        border-radius: 6px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .d3-card img { height: 32px; }
+
+    /* ============ Design 4: Gradient accent strip ============ */
+    .d4-container {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .d4-container::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #FFC107 0%, #FF6F00 100%);
+    }
+    .d4-container img { height: 32px; margin-left: 14px; }
+
+    /* ============ Design 5: Logo + Version badge ============ */
+    .d5 img { height: 30px; }
+    .d5-badge {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    /* ============ Design 6: Logo + TOMAS TECH company ============ */
+    .d6 img { height: 30px; }
+    .d6-company {
+        border-left: 1px solid rgba(255,255,255,0.3);
+        padding-left: 12px;
+        margin-left: 6px;
+        line-height: 1.2;
+    }
+    .d6-name { font-size: 13px; font-weight: 600; }
+    .d6-sub { font-size: 9px; opacity: 0.8; letter-spacing: 0.5px; }
+
+    /* ============ Design 7: Floating card with shadow ============ */
+    .d7-card {
+        background: linear-gradient(135deg, #fff 0%, #E3F2FD 100%);
+        padding: 4px 18px 4px 10px;
+        border-radius: 20px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+    .d7-card img { height: 30px; }
+    .d7-card span {
+        font-size: 13px; font-weight: 700; color: #0D47A1; letter-spacing: 1px;
+    }
+
+    /* ============ Design 8: Logo + Divider + Page title ============ */
+    .d8 img { height: 30px; }
+    .d8-divider {
+        width: 1px; height: 26px;
+        background: rgba(255,255,255,0.4);
+        margin: 0 12px;
+    }
+    .d8-page { font-size: 14px; font-weight: 500; }
+
+    /* ============ Design 9: Dark stripe navbar (different tone) ============ */
+    .d9-navbar {
+        background: linear-gradient(90deg, #0D47A1 0%, #1976D2 50%, #0D47A1 100%);
+    }
+    .d9 img { height: 32px; }
+    .d9-text { font-size: 15px; font-weight: 600; letter-spacing: 2px; margin-left: 4px; }
+
+    /* ============ Design 10: Logo + Glow effect + Breadcrumb ============ */
+    .d10 img {
+        height: 32px;
+        filter: drop-shadow(0 0 8px rgba(255,255,255,0.5));
+    }
+    .d10-crumb { font-size: 12px; opacity: 0.8; margin-left: 10px; letter-spacing: 0.5px; }
+
+    .choice-note {
+        margin-top: 32px;
+        padding: 16px 20px;
+        background: #FFF3E0;
+        border-left: 4px solid #FB8C00;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+    .choice-note strong { color: #E65100; }
+</style>
+</head>
+<body>
+
+<h1>🎨 PEGASUS ERP ヘッダデザイン — 10 案プレビュー</h1>
+<p class="intro">現行ナビバーの左上ロゴ部分について、10パターンのデザイン案を提示します。気に入った案の番号をお知らせください。</p>
+
+<!-- ======== Design 1 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案1: シンプル ロゴのみ <span style="color:#4CAF50;font-size:11px;margin-left:6px;">(現行案)</span></div>
+            <div class="design-desc">最もミニマル。余白を活かした設計。</div>
+        </div>
+        <div class="design-num">1</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left d1-logo">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 2 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案2: ロゴ + "PEGASUS ERP" テキスト</div>
+            <div class="design-desc">ロゴ横に ERP の文字を添えて用途を明示。</div>
+        </div>
+        <div class="design-num">2</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left d2">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            <span class="d2-text">ERP</span>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 3 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案3: 白カード配置 (立体感)</div>
+            <div class="design-desc">ロゴを白いカードに乗せ、浮遊感と視認性を向上。</div>
+        </div>
+        <div class="design-num">3</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left">
+            <div class="d3-card">
+                <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            </div>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 4 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案4: 左端グラデーションアクセント</div>
+            <div class="design-desc">橙系グラデーションの縦ラインで存在感を演出。</div>
+        </div>
+        <div class="design-num">4</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left" style="height:100%;">
+            <div class="d4-container">
+                <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            </div>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 5 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案5: ロゴ + バージョンバッジ</div>
+            <div class="design-desc">バージョン情報をバッジで表示。管理者向け。</div>
+        </div>
+        <div class="design-num">5</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left d5">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            <span class="d5-badge">v3.0</span>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 6 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案6: ロゴ + 会社名 (TOMAS TECH)</div>
+            <div class="design-desc">会社名を併記し、自社ブランディングを強化。</div>
+        </div>
+        <div class="design-num">6</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left d6">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            <div class="d6-company">
+                <div class="d6-name">TOMAS TECH</div>
+                <div class="d6-sub">CO.,LTD.</div>
+            </div>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 7 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案7: ピル型カード + テキスト</div>
+            <div class="design-desc">角丸ピル型カードにロゴとテキスト。高級感重視。</div>
+        </div>
+        <div class="design-num">7</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left">
+            <div class="d7-card">
+                <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+                <span>PEGASUS</span>
+            </div>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 8 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案8: ロゴ + 縦線 + ページ名</div>
+            <div class="design-desc">ロゴ横に縦線区切りと現在のページ名を表示。</div>
+        </div>
+        <div class="design-num">8</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left d8">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            <div class="d8-divider"></div>
+            <span class="d8-page">Dashboard</span>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 9 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案9: ダークグラデーションバー</div>
+            <div class="design-desc">両端に向かって濃くなる奥行きのあるグラデーション背景。</div>
+        </div>
+        <div class="design-num">9</div>
+    </div>
+    <div class="mock-navbar d9-navbar">
+        <div class="mock-left d9">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            <span class="d9-text">PEGASUS</span>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<!-- ======== Design 10 ======== -->
+<div class="design-card">
+    <div class="design-header">
+        <div>
+            <div class="design-title">案10: ロゴ + グロー効果 + パンくず</div>
+            <div class="design-desc">ロゴに淡い発光を付け、パンくずナビも同行表示。</div>
+        </div>
+        <div class="design-num">10</div>
+    </div>
+    <div class="mock-navbar">
+        <div class="mock-left d10">
+            <img src="/assets/PEGASUS_Logo_02.png" alt="PEGASUS">
+            <span class="d10-crumb">/ Dashboard / Sales</span>
+        </div>
+        <div class="mock-right"><span>2026-04-15 | THB</span><div class="mock-avatar">A</div></div>
+    </div>
+</div>
+
+<div class="choice-note">
+    <strong>選び方：</strong> 気に入ったデザインの番号(例「案3」)をお知らせください。実際のサイドバー・画面幅とのバランスを調整のうえ、本番ナビバーに適用します。複数を組み合わせた混合案も可能です(例:「案3 + 案8」= 白カード + ページ名)。
+</div>
+
+</body>
+</html>

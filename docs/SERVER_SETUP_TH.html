@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PEGASUS ERP — คู่มือการติดตั้งบนเซิร์ฟเวอร์จริง</title>
+<style>
+body { font-family: 'Noto Sans Thai', 'Leelawadee UI', Arial, sans-serif; font-size: 11pt; line-height: 1.55; }
+h1 { color: #1565C0; border-bottom: 2px solid #1565C0; padding-bottom: 4px; font-size: 22pt; }
+h2 { color: #1976D2; border-bottom: 1px solid #90CAF9; padding-bottom: 2px; font-size: 16pt; margin-top: 18pt; }
+h3 { color: #1976D2; font-size: 13pt; margin-top: 14pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+th, td { border: 1px solid #BDBDBD; padding: 6px 10px; text-align: left; font-size: 10pt; }
+th { background: #E3F2FD; color: #0D47A1; }
+code { font-family: Consolas, monospace; background: #F5F5F5; padding: 1px 4px; border-radius: 2px; font-size: 9.5pt; }
+pre { background: #263238; color: #ECEFF1; border-left: 3px solid #1976D2; padding: 10px 14px; font-family: Consolas, monospace; font-size: 9.5pt; overflow-x: auto; }
+.cover { text-align: center; padding: 80px 20px; }
+.cover h1 { border: none; font-size: 32pt; color: #0D47A1; }
+.cover .sub { color: #616161; font-size: 14pt; margin-top: 10pt; }
+.note { background: #FFF8E1; border-left: 4px solid #FB8C00; padding: 8px 12px; margin: 8pt 0; }
+.warn { background: #FFEBEE; border-left: 4px solid #D32F2F; padding: 8px 12px; margin: 8pt 0; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+<h1>PEGASUS ERP</h1>
+<div class="sub">คู่มือการติดตั้งบนเซิร์ฟเวอร์จริง (Production Server Setup)</div>
+<div class="sub" style="margin-top:40pt;">Tomas Tech Co., Ltd.<br>Version 3.0 — 2026-04-16</div>
+</div>
+
+<h1>คู่มือการติดตั้งบนเซิร์ฟเวอร์จริง</h1>
+
+<h2>1. ข้อกำหนดของเซิร์ฟเวอร์</h2>
+<table>
+<tr><th>รายการ</th><th>สเปกที่แนะนำ</th></tr>
+<tr><td>OS</td><td>Ubuntu Server 22.04 LTS (แนะนำ) / RHEL 9</td></tr>
+<tr><td>CPU</td><td>4 คอร์ขึ้นไป</td></tr>
+<tr><td>หน่วยความจำ</td><td>8 GB ขึ้นไป (แนะนำ 16 GB)</td></tr>
+<tr><td>ดิสก์</td><td>SSD 100 GB ขึ้นไป</td></tr>
+<tr><td>เครือข่าย</td><td>Static IP, โดเมนสำหรับ HTTPS</td></tr>
+<tr><td>PHP</td><td>8.2 ขึ้นไป (php-fpm)</td></tr>
+<tr><td>DB</td><td>PostgreSQL 15 ขึ้นไป</td></tr>
+<tr><td>Web Server</td><td>Nginx 1.22+ (แนะนำ) หรือ Apache 2.4</td></tr>
+</table>
+
+<h2>2. ตั้งค่าระบบเริ่มต้น</h2>
+<h3>2.1 สร้างผู้ใช้ &amp; SSH</h3>
+<pre>sudo adduser pegasus
+sudo usermod -aG sudo pegasus
+sudo mkdir -p /home/pegasus/.ssh
+sudo cp ~/.ssh/authorized_keys /home/pegasus/.ssh/
+sudo chown -R pegasus:pegasus /home/pegasus/.ssh
+sudo chmod 700 /home/pegasus/.ssh
+sudo chmod 600 /home/pegasus/.ssh/authorized_keys</pre>
+
+<h3>2.2 Firewall</h3>
+<pre>sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable</pre>
+
+<h3>2.3 Timezone</h3>
+<pre>sudo timedatectl set-timezone Asia/Bangkok</pre>
+
+<h2>3. ติดตั้งซอฟต์แวร์ที่จำเป็น</h2>
+<pre>sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo apt install -y nginx php8.2-fpm php8.2-pgsql php8.2-mbstring php8.2-gd \
+    php8.2-xml php8.2-curl php8.2-zip unzip git \
+    postgresql-15 postgresql-contrib-15 \
+    certbot python3-certbot-nginx</pre>
+
+<h2>4. ตั้งค่า PostgreSQL</h2>
+<h3>4.1 สร้าง DB และผู้ใช้</h3>
+<pre>sudo -u postgres psql &lt;&lt;EOF
+CREATE USER pegasus_user WITH PASSWORD 'STRONG_PASSWORD_HERE';
+CREATE DATABASE pegasus_erp OWNER pegasus_user ENCODING 'UTF8';
+GRANT ALL PRIVILEGES ON DATABASE pegasus_erp TO pegasus_user;
+EOF</pre>
+
+<h3>4.2 ตั้งค่าการเชื่อมต่อ (pg_hba.conf)</h3>
+<p>เพิ่มใน <code>/etc/postgresql/15/main/pg_hba.conf</code>:</p>
+<pre>local   pegasus_erp   pegasus_user                      md5
+host    pegasus_erp   pegasus_user   127.0.0.1/32       md5</pre>
+<pre>sudo systemctl restart postgresql</pre>
+
+<h2>5. วาง Application</h2>
+<pre># วางไฟล์
+sudo mkdir -p /var/www/pegasus_erp
+sudo chown pegasus:www-data /var/www/pegasus_erp
+cd /var/www/pegasus_erp
+unzip ~/pegasus_erp_source_YYYYMMDD.zip -d .
+
+# โฟลเดอร์ที่เขียนได้
+sudo mkdir -p uploads backups
+sudo chown -R www-data:www-data uploads backups
+sudo chmod 770 uploads backups</pre>
+
+<h2>6. Environment Variables / การเชื่อมต่อ DB</h2>
+<p>สร้างไฟล์ <code>/var/www/pegasus_erp/.env</code>:</p>
+<pre>DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=pegasus_erp
+DB_USER=pegasus_user
+DB_PASS=STRONG_PASSWORD_HERE</pre>
+
+<h2>7. เริ่มต้น Database</h2>
+<pre># กู้คืนจาก backup
+PGPASSWORD='STRONG_PASSWORD_HERE' pg_restore -U pegasus_user -h localhost \
+    -d pegasus_erp -c /path/to/pegasus_erp_YYYYMMDD.dump
+
+# หรือติดตั้งใหม่
+psql -U pegasus_user -d pegasus_erp -f database/schema.sql
+psql -U pegasus_user -d pegasus_erp -f database/seed.sql</pre>
+
+<h2>8. ตั้งค่า Nginx</h2>
+<p><code>/etc/nginx/sites-available/pegasus_erp</code>:</p>
+<pre>server {
+    listen 80;
+    server_name erp.example.com;
+
+    root /var/www/pegasus_erp/public;
+    index index.php index.html;
+
+    client_max_body_size 32M;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+    }
+
+    location ~ /\.(env|git) { deny all; }
+    location ~* \.(log|sql|dump)$ { deny all; }
+}</pre>
+<pre>sudo ln -s /etc/nginx/sites-available/pegasus_erp /etc/nginx/sites-enabled/
+sudo nginx -t &amp;&amp; sudo systemctl reload nginx</pre>
+
+<h2>9. เปิด HTTPS (Let's Encrypt)</h2>
+<pre>sudo certbot --nginx -d erp.example.com
+sudo certbot renew --dry-run</pre>
+
+<h2>10. ปรับแต่ง php-fpm</h2>
+<p><code>/etc/php/8.2/fpm/php.ini</code>:</p>
+<pre>memory_limit = 256M
+upload_max_filesize = 32M
+post_max_size = 32M
+date.timezone = Asia/Bangkok
+session.gc_maxlifetime = 7200</pre>
+<pre>sudo systemctl restart php8.2-fpm</pre>
+
+<h2>11. Auto Backup (cron)</h2>
+<pre>sudo crontab -e
+
+# สำรองทุกวันตอน 3:00 (เก็บ 30 วัน)
+0 3 * * * PGPASSWORD='STRONG_PASSWORD_HERE' pg_dump -U pegasus_user -h localhost \
+  -d pegasus_erp -Fc -f /var/www/pegasus_erp/backups/pegasus_$(date +\%Y\%m\%d).dump &amp;&amp; \
+  find /var/www/pegasus_erp/backups -name 'pegasus_*.dump' -mtime +30 -delete</pre>
+
+<h2>12. การตรวจสอบ Log</h2>
+<table>
+<tr><th>ประเภท</th><th>ตำแหน่ง</th></tr>
+<tr><td>Nginx access</td><td>/var/log/nginx/access.log</td></tr>
+<tr><td>Nginx error</td><td>/var/log/nginx/error.log</td></tr>
+<tr><td>PHP-FPM</td><td>/var/log/php8.2-fpm.log</td></tr>
+<tr><td>PostgreSQL</td><td>/var/log/postgresql/postgresql-15-main.log</td></tr>
+</table>
+
+<h2>13. Checklist การทดสอบ</h2>
+<ul>
+<li>☐ เปิด <code>https://erp.example.com/login</code> ได้</li>
+<li>☐ เข้าสู่ระบบด้วย admin ได้</li>
+<li>☐ Dashboard แสดง KPI</li>
+<li>☐ สร้าง PDF ใบเสนอราคาได้</li>
+<li>☐ ภาษาไทย/ญี่ปุ่นแสดงถูกต้อง</li>
+<li>☐ cron backup สร้างไฟล์ใน <code>/backups/</code></li>
+<li>☐ ใบรับรอง SSL ใช้ได้ (A+ บน ssllabs.com)</li>
+</ul>
+
+<div class="warn"><strong>ข้อควรระวังด้านความปลอดภัย:</strong>
+<ul>
+<li>เปลี่ยนรหัสผ่านเริ่มต้นของ admin (<code>admin123</code>) ทันที</li>
+<li>รหัสผ่าน DB ต้องเป็น random 20+ ตัวอักษร</li>
+<li>ไฟล์ .env ตั้ง chmod 600</li>
+<li>ปิดการเชื่อมต่อ remote สำหรับ superuser postgres</li>
+</ul>
+</div>
+
+<p style="margin-top:40pt;color:#757575;font-size:9pt;text-align:center;">
+Tomas Tech Co., Ltd. — PEGASUS ERP v3.0 — 2026-04-16
+</p>
+
+</body>
+</html>

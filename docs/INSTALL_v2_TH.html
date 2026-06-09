@@ -1,0 +1,229 @@
+﻿<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+body { font-family: 'Yu Gothic', 'Meiryo', 'Noto Sans Thai', Arial, sans-serif; font-size: 11pt; line-height: 1.55; }
+h1 { color: #0D47A1; border-bottom: 2px solid #1976D2; padding-bottom: 4px; font-size: 22pt; }
+h2 { color: #1565C0; border-bottom: 1px solid #90CAF9; padding-bottom: 2px; font-size: 16pt; margin-top: 18pt; }
+h3 { color: #1976D2; font-size: 13pt; margin-top: 14pt; }
+h4 { color: #1976D2; font-size: 12pt; margin-top: 12pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+th, td { border: 1px solid #BDBDBD; padding: 6px 10px; font-size: 10pt; }
+th { background: #E3F2FD; color: #0D47A1; text-align: left; }
+code { font-family: Consolas, monospace; background: #F5F5F5; padding: 1px 4px; font-size: 9.5pt; }
+pre { background: #263238; color: #ECEFF1; padding: 10px 14px; font-family: Consolas, monospace; font-size: 9.5pt; border-left: 3px solid #1976D2; white-space: pre-wrap; }
+hr { border: none; border-top: 1px dashed #BDBDBD; margin: 16pt 0; }
+li { margin-left: 20pt; }
+</style></head><body><h1>PEGASUS ERP — คู่มือการติดตั้ง v2.0 (ภาษาไทย)</h1>
+
+สำหรับ: Tomas Tech Co., Ltd. / Pegasus ERP v3.1
+อัปเดตล่าสุด: 2026-04-17
+
+<hr>
+
+<h2>1. ความต้องการของระบบ</h2>
+
+| รายการ | แนะนำ |
+|--------|-------|
+| OS | Windows 10/11 หรือ Ubuntu 22.04 LTS |
+| CPU | 4 คอร์ขึ้นไป |
+| หน่วยความจำ | 8 GB+ (แนะนำ 16 GB) |
+| ดิสก์ | SSD 50 GB+ |
+| PHP | 8.2+ (ext: pdo_pgsql, pgsql, mbstring, gd, fileinfo) |
+| PostgreSQL | 15+ |
+| เบราว์เซอร์ | Chrome / Edge เวอร์ชันล่าสุด |
+
+<hr>
+
+<h2>2. ขั้นตอนการติดตั้ง (Windows)</h2>
+
+<h3>2.1 ติดตั้ง PHP</h3>
+<code>`</code>powershell
+scoop install php
+<code>`</code>
+
+แก้ <code>php.ini</code> เปิดใช้ extensions:
+<code>`</code>ini
+extension=pdo_pgsql
+extension=pgsql
+extension=mbstring
+extension=gd
+extension=fileinfo
+date.timezone = "Asia/Bangkok"
+<code>`</code>
+
+<h3>2.2 ติดตั้ง PostgreSQL</h3>
+<code>`</code>powershell
+scoop install postgresql
+initdb -D <datadir> -E UTF8 -U postgres
+pg_ctl -D <datadir> start
+<code>`</code>
+
+<h3>2.3 วาง Source Code</h3>
+<code>`</code>
+Pegasus_ERP_R1/
+├── config/            การตั้งค่า DB
+│   └── credentials/   ข้อมูลเชื่อมต่อ (ความลับ)
+├── controllers/
+├── core/
+├── database/          สคริปต์ schema + migration
+├── docs/              คู่มือ
+├── lang/              ไฟล์ภาษา (en/ja/th)
+├── models/
+├── public/            Web root
+├── service/           Windows service batch
+├── views/
+├── uploads/
+└── backups/
+<code>`</code>
+
+<h3>2.4 เริ่มต้น DB</h3>
+
+<strong>A) กู้คืนจาก backup (แนะนำ)</strong>
+<code>`</code>powershell
+psql -U postgres -d postgres -c "CREATE DATABASE pegasus_erp ENCODING 'UTF8';"
+psql -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD.sql
+<h1>หรือ</h1>
+pg_restore -U postgres -d pegasus_erp -c backups\pegasus_erp_YYYYMMDD.dump
+<code>`</code>
+
+<strong>B) ติดตั้งใหม่</strong>
+<code>`</code>
+setup-database.bat
+<code>`</code>
+
+<h3>2.5 ตั้งค่าการเชื่อมต่อ</h3>
+<code>config/database.php</code> หรือ environment variables:
+<li>DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS</li>
+
+<h3>2.6 ติดตั้ง PostgreSQL เป็น Windows Service ★ใหม่</h3>
+
+รันในฐานะ <strong>Administrator</strong>:
+<code>`</code>
+service\install-postgres-service.bat
+<code>`</code>
+
+Service <code>PegasusPostgres</code> จะถูกลงทะเบียนและเริ่มอัตโนมัติเมื่อเปิดเครื่อง
+
+คำสั่ง:
+<code>`</code>cmd
+sc query PegasusPostgres
+net start PegasusPostgres
+net stop PegasusPostgres
+<code>`</code>
+
+<h3>2.7 เริ่ม Application Server</h3>
+<code>`</code>
+start-server.bat
+<h1>หรือ</h1>
+php -S localhost:8080 -t public/
+<code>`</code>
+
+<h3>2.8 เข้าสู่ระบบครั้งแรก</h3>
+<li>URL: http://localhost:8080/login</li>
+<li>User: admin / Pass: admin123</li>
+<li><strong>เปลี่ยนรหัสทันทีหลังล็อกอิน</strong></li>
+
+<hr>
+
+<h2>3. ลำดับ Migration (สำหรับ DB ใหม่)</h2>
+
+รันสคริปต์ใน <code>database/</code> ตามลำดับ (หากกู้จาก backup ให้ข้าม):
+
+1. <code>schema.sql</code>
+2. <code>seed.sql</code>
+3. <code>schema_crm.sql</code> / <code>schema_crm_v2.sql</code>
+4. <code>schema_projects.sql</code> / <code>schema_project_costs.sql</code>
+5. <code>seed_crm.sql</code>
+6. <strong>Migration เพิ่มเติม (ตามลำดับ):</strong>
+   <li><code>reseed_deal_statuses.sql</code> — 21 สถานะดีล</li>
+   <li><code>reseed_solution_categories.sql</code> — 32 หมวดโซลูชัน + อัตรากำไร</li>
+   <li><code>fix_division_department_master.sql</code> — คอลัมน์ TH ของแผนก</li>
+   <li><code>add_customer_contacts_and_cards.sql</code> — ตารางนามบัตร</li>
+   <li><code>add_exchange_rates.sql</code> — มาสเตอร์อัตราแลกเปลี่ยน</li>
+   <li><code>so_status_unification.sql</code> — สถานะคำสั่งขาย 3 ค่า</li>
+   <li><code>add_role_permissions.sql</code> — มาสเตอร์สิทธิ์</li>
+   <li><code>rename_customer_code_prefix.sql</code> — CUS- prefix</li>
+   <li><code>fix_customer_code_unique.sql</code> — ป้องกันรหัสซ้ำ</li>
+   <li><code>enhance_deal_activities.sql</code> — activity log ขยาย</li>
+   <li><code>add_payment_term_50_40_10.sql</code> — ตัวอย่างเงื่อนไขชำระ</li>
+   <li><code>update_role_manager.sql</code> — ปรับชื่อ role</li>
+
+<hr>
+
+<h2>4. การติดตั้งใน Production (Linux / Nginx)</h2>
+
+<h3>4.1 Ubuntu 22.04</h3>
+
+<code>`</code>bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y nginx php8.2-fpm php8.2-pgsql php8.2-mbstring \
+    php8.2-gd php8.2-xml php8.2-curl php8.2-zip unzip git \
+    postgresql-15 postgresql-contrib-15 \
+    certbot python3-certbot-nginx
+
+sudo timedatectl set-timezone Asia/Bangkok
+sudo ufw allow OpenSSH && sudo ufw allow 80/tcp && sudo ufw allow 443/tcp && sudo ufw enable
+<code>`</code>
+
+<h3>4.2 DB</h3>
+
+<code>`</code>bash
+sudo -u postgres psql <<EOF
+CREATE USER pegasus_user WITH PASSWORD 'STRONG_PASSWORD';
+CREATE DATABASE pegasus_erp OWNER pegasus_user ENCODING 'UTF8';
+GRANT ALL PRIVILEGES ON DATABASE pegasus_erp TO pegasus_user;
+EOF
+sudo systemctl enable --now postgresql
+<code>`</code>
+
+<h3>4.3 วาง Application</h3>
+
+<code>`</code>bash
+sudo mkdir -p /var/www/pegasus_erp
+cd /var/www/pegasus_erp
+unzip ~/pegasus_erp_source_YYYYMMDD.zip -d .
+sudo chown -R www-data:www-data uploads backups public/uploads
+sudo chmod 770 uploads backups public/uploads/business_cards
+<code>`</code>
+
+<h3>4.4 Nginx + HTTPS</h3>
+<li>ตั้งค่า Nginx site (เหมือน JA version)</li>
+<li><code>sudo certbot --nginx -d erp.tomastech.co.th</code></li>
+
+<h3>4.5 Cron Backup</h3>
+<code>`</code>bash
+0 3 * * * PGPASSWORD='STRONG_PASSWORD' pg_dump -U pegasus_user -h localhost \
+  -d pegasus_erp -Fc -f /var/www/pegasus_erp/backups/pegasus_$(date +\%Y\%m\%d).dump && \
+  find /var/www/pegasus_erp/backups -name 'pegasus_*.dump' -mtime +30 -delete
+<code>`</code>
+
+<hr>
+
+<h2>5. Checklist การทดสอบ</h2>
+
+<li>[ ] <code>http://<host>/login</code> แสดง</li>
+<li>[ ] ล็อกอิน admin ได้ → dashboard</li>
+<li>[ ] เมนู: ลูกค้า, อัตราแลกเปลี่ยน, สิทธิ์การใช้งาน ปรากฏ</li>
+<li>[ ] สร้าง PDF ใบเสนอราคา (แสดงตราอนุมัติ)</li>
+<li>[ ] OCR นามบัตรทำงาน</li>
+<li>[ ] ใบแจ้งหนี้ AR: เลือกคำสั่งขาย → ข้อมูลเติมอัตโนมัติ</li>
+<li>[ ] แปลงดีล → คำสั่งขาย (ป้องกันซ้ำ + สร้าง PJ)</li>
+<li>[ ] บันทึกการเปลี่ยนแปลงทำงาน</li>
+<li>[ ] PostgreSQL เริ่มอัตโนมัติ (service / cron)</li>
+
+<hr>
+
+<h2>6. ความปลอดภัย</h2>
+
+<li>[ ] เปลี่ยนรหัส admin</li>
+<li>[ ] รหัส DB: random 20+ ตัวอักษร</li>
+<li>[ ] <code>config/credentials/</code> อยู่ใน <code>.gitignore</code></li>
+<li>[ ] SSL A+ บน ssllabs.com</li>
+<li>[ ] ปิด remote connection สำหรับ postgres superuser</li>
+
+<hr>
+
+<h2>7. ติดต่อ</h2>
+
+<li>ผู้พัฒนา: Tomas Tech Co., Ltd.</li>
+<li>ผู้ดูแล: R. Nozaki</li>
+<li>เวอร์ชัน: PEGASUS ERP v3.1</li>
+</body></html>

@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+body { font-family: 'Yu Gothic', 'Meiryo', 'Noto Sans Thai', Arial, sans-serif; font-size: 11pt; line-height: 1.55; }
+h1 { color: #0D47A1; border-bottom: 2px solid #1976D2; padding-bottom: 4px; font-size: 22pt; }
+h2 { color: #1565C0; border-bottom: 1px solid #90CAF9; padding-bottom: 2px; font-size: 16pt; margin-top: 18pt; }
+h3 { color: #1976D2; font-size: 13pt; margin-top: 14pt; }
+h4 { color: #1976D2; font-size: 12pt; margin-top: 12pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+th, td { border: 1px solid #BDBDBD; padding: 6px 10px; font-size: 10pt; }
+th { background: #E3F2FD; color: #0D47A1; text-align: left; }
+code { font-family: Consolas, monospace; background: #F5F5F5; padding: 1px 4px; font-size: 9.5pt; }
+pre { background: #263238; color: #ECEFF1; padding: 10px 14px; font-family: Consolas, monospace; font-size: 9.5pt; border-left: 3px solid #1976D2; white-space: pre-wrap; }
+hr { border: none; border-top: 1px dashed #BDBDBD; margin: 16pt 0; }
+li { margin-left: 20pt; }
+</style></head><body><h1>PEGASUS ERP — 操作マニュアル v2.0 (日本語)</h1>
+
+Tomas Tech Co., Ltd. 向け ERP システム
+最終更新: 2026-04-17
+
+<hr>
+
+<h2>目次</h2>
+1. システム概要
+2. ログインとダッシュボード
+3. 営業モジュール
+4. 購買モジュール
+5. 会計・AR/AP モジュール
+6. マスタ管理
+7. 権限と監査ログ
+8. 分析ダッシュボード
+9. ファイルの保存場所
+10. トラブルシューティング
+
+<hr>
+
+<h2>1. システム概要</h2>
+
+<li><strong>バックエンド</strong>: PHP 8.2+ / PostgreSQL 15+</li>
+<li><strong>フロントエンド</strong>: PHPテンプレート + Chart.js + Tesseract.js (OCR)</li>
+<li><strong>多言語</strong>: 日本語 / English / ไทย (右下で切替)</li>
+<li><strong>認証</strong>: セッションベース + ロール(<code>ADMIN / SALES_MANAGER / ACCOUNTING / STAFF</code>) + 権限マスタ</li>
+
+<hr>
+
+<h2>2. ログインとダッシュボード</h2>
+
+<h3>ログイン</h3>
+<li>URL: <code>http://<サーバー>:8080/login</code></li>
+<li>初期 admin / admin123 (初回ログイン後に必ず変更)</li>
+
+<h3>ダッシュボード</h3>
+KPI カード (現金残高 / 入金 / 出金 / パイプライン / 予測) と、
+Cash Flow Actual / Sales Forecast / Pipeline / Top Customers を一画面で確認。
+
+<hr>
+
+<h2>3. 営業モジュール</h2>
+
+<h3>3.1 顧客管理 (営業 → 顧客管理)</h3>
+<strong>NEW</strong>: 営業向け顧客一覧。担当者数/案件数/パイプライン合計/最終接触日を表示。
+<li>顧客詳細 → <strong>名刺 OCR 取り込み</strong> (Tesseract.js)</li>
+  1. 名刺画像アップロード
+  2. 「OCR で読み取り」をクリック
+  3. 抽出された氏名/会社名/電話/メール等を確認して保存
+<li>画像は自動圧縮 (最大1200px、JPEG 85%) + サムネイル (最大400px)</li>
+
+<h3>3.2 案件管理 (営業 → 案件)</h3>
+<strong>NEW</strong>: フィルタ拡張
+<li>顧客 (ドロップダウン)</li>
+<li>ステータス (21段階: Lead Identified 〜 Closed Won)</li>
+<li>営業担当</li>
+<li>案件名 (部分一致)</li>
+<li>金額 min〜max</li>
+<li>見込度 (0〜100%)</li>
+<li>フリー検索 (Deal No / PJ No)</li>
+
+案件編集画面:
+<li><strong>評価利益率 (%)</strong> はソリューションカテゴリから自動算出</li>
+  <li>IT = 100% / OT, FA = 10% / Hardware, License, Other = 0%</li>
+<li><strong>関連プロジェクト</strong> は受注一覧から選択</li>
+<li><strong>営業名</strong> 欄は廃止 (営業担当ドロップダウンに統一)</li>
+
+<h3>3.3 活動ログ</h3>
+<strong>NEW</strong>: 必須項目追加
+<li><strong>コンタクト者</strong> (必須、顧客担当者マスタから選択)</li>
+  <li>マスタに未登録の場合は、顧客詳細画面で先に登録</li>
+<li><strong>開始時間 / 終了時間</strong> → <strong>所要時間</strong> を自動算出</li>
+<li><strong>議事</strong> (旧: 説明): 会議内容を記録</li>
+<li><strong>次のアクション / 次のアクション日</strong> (必須入力)</li>
+
+<h3>3.4 見積書</h3>
+<li>新規作成 → <strong>有効期限は自動的に発行日 + 1ヶ月</strong> で設定 (発行日変更時も追従)</li>
+<li>多段承認フロー (Draft → Internal Review → Manager 承認 → Director 承認)</li>
+<li>承認済み見積書は PDF に承認者氏名 + スタンプ画像が表示</li>
+<li>支払条件は <code>payment_term_installments</code> テーブルから % + EN 説明を展開</li>
+
+<h3>3.5 受注登録</h3>
+<strong>NEW</strong>: #11/#12
+<li>案件 → 受注変換時、<strong>重複登録を自動防止</strong></li>
+<li>ステータスは以下 3 種に統一 (手動変更不可):</li>
+  <li><code>CONFIRMED</code> (受注登録時)</li>
+  <li><code>INVOICED</code> (AR 請求書作成時、自動遷移)</li>
+  <li><code>CANCELLED</code> (キャンセル時)</li>
+<li><strong>キャンセルボタンは管理者のみ表示</strong></li>
+
+<hr>
+
+<h2>4. 購買モジュール</h2>
+
+<h3>4.1 発注一覧</h3>
+<strong>NEW</strong>: 検索機能拡張
+<li>ステータスドロップダウン</li>
+<li>仕入先ドロップダウン (発注ありの仕入先のみ)</li>
+<li>日付範囲 (from / to)</li>
+<li>フリー検索 (PO No / 仕入先名)</li>
+
+<h3>4.2 発注書作成</h3>
+<li>仕入先 → 品目選択 → 数量・単価入力 → VAT 自動計算</li>
+<li>承認済み発注書は PDF に承認者スタンプ表示</li>
+<li>支払条件は payment_terms マスタから選択</li>
+
+<hr>
+
+<h2>5. 会計・AR/AP モジュール</h2>
+
+<h3>5.1 売掛請求書 (AR Invoice) <strong>NEW</strong></h3>
+<li>新規作成時、画面上部に <strong>受注選択</strong> ドロップダウン</li>
+  <li>受注を選ぶと顧客・明細・<strong>支払条件</strong>・<strong>支払期日</strong> が自動入力</li>
+  <li>支払期日 = 請求日 + Credit Days (支払条件から自動取得)</li>
+<li><strong>支払条件は見積書から固定</strong> (管理者のみ編集可能、一般ユーザーはグレーアウト)</li>
+<li>保存時、受注のステータスが自動で <code>INVOICED</code> に遷移</li>
+<li>詳細画面: 金額サマリ + 明細 + 入金履歴 + PDF ダウンロード</li>
+
+<h3>5.2 買掛請求書 (AP Invoice)</h3>
+<li>発注書から自動展開、または手動入力</li>
+<li>AP 支払管理 (部分支払対応)</li>
+
+<h3>5.3 入金管理</h3>
+<li>請求書に対する部分入金を記録</li>
+<li>複数請求書への按分 (ar_payment_allocations)</li>
+
+<hr>
+
+<h2>6. マスタ管理</h2>
+
+| マスタ | 内容 |
+|--------|------|
+| 顧客 | CUS-XXXX (重複禁止) / EN・JP・TH 3言語名 / 担当者リスト + 名刺画像 |
+| 仕入先 | SUP-XXXX / WHT税率設定 |
+| 品目 | ITM-XXXX / 有効期間バージョニング |
+| 勘定科目 | TFRS準拠 Chart of Accounts |
+| 支払条件 | 分割明細対応 (例: 50%DP + 40%据付 + 10%引渡, 各Net30) |
+| 銀行 | CRUD |
+| 事業部 / 部署 | 3言語名 (13部門) |
+| ソリューションカテゴリ | <strong>NEW</strong>: 32種 + カテゴリグループ (IT/OT/FA/Hardware/License/Other) + 評価利益率 |
+| 案件ステータス | 21種 (Phase 1〜5 + Lost/On Hold) |
+| <strong>為替マスタ</strong> | <strong>NEW</strong>: 16通貨相互、有効期間設定、逆方向自動生成 |
+| <strong>権限設定</strong> | <strong>NEW (管理者)</strong>: ロール×権限のチェックボックスマトリクス |
+| <strong>変更ログ</strong> | <strong>NEW (管理者)</strong>: 全マスタ・トランザクションの変更履歴 |
+
+<h3>6.1 為替マスタ</h3>
+<li>メニュー: マスタ → <strong>為替マスタ</strong></li>
+<li>通貨ペア + レート + 有効期間(From/To) を登録</li>
+<li>逆方向レート自動生成オプション (USD→THB と THB→USD)</li>
+<li>API: <code>GET /api/exchange-rate?from=USD&to=THB&date=2026-04-17</code></li>
+
+<hr>
+
+<h2>7. 権限と監査ログ</h2>
+
+<h3>7.1 権限設定 (管理者のみ)</h3>
+<li>メニュー: マスタ → <strong>権限設定</strong></li>
+<li>ロール × 権限のチェックボックスマトリクス</li>
+<li>権限カテゴリ: sales / purchasing / inventory / accounting / ar / ap / hr / payroll / expense / production / master / admin</li>
+<li>ADMIN ロールは全権限強制 ON (無効化不可)</li>
+
+<h3>7.2 変更ログビューア (管理者のみ)</h3>
+<li>メニュー: マスタ → <strong>変更ログ</strong></li>
+<li>フィルタ: テーブル / 操作(INSERT/UPDATE/DELETE) / ユーザー / 日付範囲 / フリー検索</li>
+<li>詳細画面で <strong>変更前/変更後</strong> を並列表示 (黄色ハイライト = 変更あり)</li>
+
+<hr>
+
+<h2>8. 分析ダッシュボード</h2>
+
+<h3>8.1 見積書ダッシュボード</h3>
+<li>メニュー: アナリティクス → 見積書ダッシュボード</li>
+<li>KPI: 見積総数 / 合計金額 / 受注件数 / 受注金額</li>
+<li>チャート: 見込度別 / ソリューション別 / 月別推移</li>
+<li>顧客別 Top 15 テーブル</li>
+
+<h3>8.2 発注ダッシュボード</h3>
+<li>KPI: 発注総数 / 合計金額 / 仕入先数</li>
+<li>チャート: ステータス別 / 月別</li>
+<li>仕入先別 Top 15 テーブル</li>
+
+<hr>
+
+<h2>9. ファイルの保存場所</h2>
+
+| 種類 | パス |
+|------|------|
+| ソースコード | <code>Pegasus_ERP_R1/</code> |
+| DB 接続情報 | <code>config/credentials/database_connection.txt</code> |
+| バックアップ | <code>backups/pegasus_erp_YYYYMMDD_HHMMSS.{sql,dump}</code> |
+| 名刺画像 | <code>public/uploads/business_cards/</code> |
+| 原価インポート | <code>uploads/cost_imports/</code> |
+| サービス Bat | <code>service/install-postgres-service.bat</code> |
+| マニュアル | <code>docs/MANUAL_v2_*.md, *.docx</code> |
+
+<hr>
+
+<h2>10. トラブルシューティング</h2>
+
+| 症状 | 対処 |
+|------|------|
+| ログインできない | <code>users</code> テーブル確認、<code>database/reset_passwords.php</code> で admin123 にリセット |
+| PDF が白紙 | ブラウザコンソール確認、ロゴパス確認、GD/fileinfo 拡張有効化 |
+| 名刺 OCR が動かない | ネット接続確認 (CDN)、ブラウザコンソールで Tesseract エラー確認 |
+| タイ語文字化け | DB エンコーディング UTF8 確認、php.ini の mbstring 確認 |
+| 500 エラー | PHP エラーログ (<code>php -S</code> のコンソール) 確認 |
+| SQLSTATE[25P02] | 前のトランザクションが失敗。サーバー再起動 |
+| 顧客コード重複 | <code>uniq_customer_code_active</code> 部分ユニーク制約でブロック |
+
+<hr>
+
+© 2026 Tomas Tech Co., Ltd. — PEGASUS ERP v3.1
+</body></html>

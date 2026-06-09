@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PEGASUS ERP — インストール & 操作マニュアル / คู่มือการติดตั้งและใช้งาน</title>
+<style>
+body { font-family: 'Yu Gothic', 'Meiryo', 'Noto Sans Thai', Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
+h1 { color: #1565C0; border-bottom: 2px solid #1565C0; padding-bottom: 4px; font-size: 22pt; page-break-before: always; }
+h1:first-of-type { page-break-before: auto; }
+h2 { color: #1976D2; border-bottom: 1px solid #90CAF9; padding-bottom: 2px; font-size: 16pt; margin-top: 18pt; }
+h3 { color: #1976D2; font-size: 13pt; margin-top: 14pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+th, td { border: 1px solid #BDBDBD; padding: 6px 10px; text-align: left; font-size: 10pt; }
+th { background: #E3F2FD; color: #0D47A1; }
+code { font-family: Consolas, monospace; background: #F5F5F5; padding: 1px 4px; border-radius: 2px; font-size: 9.5pt; }
+pre { background: #F5F5F5; border-left: 3px solid #1976D2; padding: 8px 12px; font-family: Consolas, monospace; font-size: 9.5pt; overflow-x: auto; }
+.cover { text-align: center; padding: 80px 20px; }
+.cover h1 { border: none; font-size: 32pt; color: #0D47A1; }
+.cover .sub { color: #616161; font-size: 14pt; margin-top: 10pt; }
+.note { background: #FFF8E1; border-left: 4px solid #FB8C00; padding: 8px 12px; margin: 8pt 0; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+<h1>PEGASUS ERP</h1>
+<div class="sub">インストール & 操作マニュアル<br>คู่มือการติดตั้งและการใช้งาน</div>
+<div class="sub" style="margin-top:40pt;">Tomas Tech Co., Ltd.<br>Version 3.0 — 2026-04-16</div>
+</div>
+
+<!-- ==================== 日本語 ==================== -->
+<h1>【日本語】PEGASUS ERP マニュアル</h1>
+
+<h2>第 1 部: インストール手順</h2>
+
+<h3>1.1 前提条件</h3>
+<table>
+<tr><th>項目</th><th>推奨バージョン</th></tr>
+<tr><td>OS</td><td>Windows 10/11 または Ubuntu 20.04+</td></tr>
+<tr><td>PHP</td><td>8.2 以上</td></tr>
+<tr><td>PostgreSQL</td><td>15 以上</td></tr>
+<tr><td>ブラウザ</td><td>Chrome / Edge 最新版</td></tr>
+<tr><td>メモリ</td><td>4 GB 以上</td></tr>
+<tr><td>ディスク</td><td>10 GB 以上の空き</td></tr>
+</table>
+
+<h3>1.2 PHP のセットアップ</h3>
+<ol>
+<li>PHP 8.2+ をインストール (Windows は <code>scoop install php</code> 推奨)</li>
+<li><code>php.ini</code> で以下を有効化:
+<pre>extension=pdo_pgsql
+extension=pgsql
+extension=mbstring
+extension=gd
+extension=fileinfo
+date.timezone = "Asia/Bangkok"</pre></li>
+<li><code>php -v</code> でバージョン確認、<code>php -m | grep pgsql</code> で拡張有効化確認</li>
+</ol>
+
+<h3>1.3 PostgreSQL のセットアップ</h3>
+<ol>
+<li>PostgreSQL 15+ をインストール</li>
+<li>データベース作成: <code>psql -U postgres -c "CREATE DATABASE pegasus_erp ENCODING 'UTF8';"</code></li>
+<li>文字コードは UTF8 必須 (タイ語・日本語サポート)</li>
+</ol>
+
+<h3>1.4 ソースコードの配置</h3>
+<p>ソース zip を任意のフォルダに展開 (例: <code>C:\Pegasus_ERP_R1\</code>)</p>
+<pre>Pegasus_ERP_R1\
+├── config\          — DB設定
+├── controllers\     — コントローラ
+├── core\            — コアフレームワーク
+├── database\        — スキーマ・SQL
+├── lang\            — 言語ファイル (en/ja/th)
+├── models\          — モデル
+├── public\          — Webルート
+├── views\           — テンプレート
+├── uploads\         — アップロード領域
+└── backups\         — DBバックアップ</pre>
+
+<h3>1.5 DB 接続設定</h3>
+<p><code>config/database.php</code> を編集するか環境変数を設定:</p>
+<table>
+<tr><th>環境変数</th><th>既定値</th></tr>
+<tr><td>DB_HOST</td><td>localhost</td></tr>
+<tr><td>DB_PORT</td><td>5432</td></tr>
+<tr><td>DB_NAME</td><td>pegasus_erp</td></tr>
+<tr><td>DB_USER</td><td>postgres</td></tr>
+<tr><td>DB_PASS</td><td>postgres</td></tr>
+</table>
+
+<h3>1.6 DB 初期化</h3>
+<p>既存バックアップからリストア:</p>
+<pre>psql -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD_HHMMSS.sql</pre>
+<p>新規構築: <code>setup-database.bat</code> を実行</p>
+
+<h3>1.7 サーバー起動</h3>
+<pre>start-server.bat
+または
+php -S localhost:8080 -t public/</pre>
+<p>ブラウザで <code>http://localhost:8080</code> にアクセス</p>
+
+<h3>1.8 初回ログイン</h3>
+<table>
+<tr><th>項目</th><th>値</th></tr>
+<tr><td>URL</td><td>http://localhost:8080/login</td></tr>
+<tr><td>ユーザー名</td><td>admin</td></tr>
+<tr><td>初期パスワード</td><td>admin123</td></tr>
+</table>
+<div class="note"><strong>重要:</strong> ログイン後、必ずパスワードを変更してください。</div>
+
+<h2>第 2 部: 操作マニュアル</h2>
+
+<h3>2.1 画面構成</h3>
+<ul>
+<li><strong>ヘッダ (上部)</strong>: ロゴ + ページ名 + 日付 + 検索 + ユーザーメニュー</li>
+<li><strong>サイドバー (左)</strong>: モジュール別メニュー</li>
+<li><strong>コンテンツ (中央)</strong>: 選択中の機能画面</li>
+</ul>
+
+<h3>2.2 モジュール一覧</h3>
+<table>
+<tr><th>モジュール</th><th>機能</th></tr>
+<tr><td>ダッシュボード</td><td>KPI / キャッシュフロー / 売上予測 / 主要顧客</td></tr>
+<tr><td>マスタ</td><td>部門 / 従業員 / 品目 / 顧客 / 仕入先 / 勘定科目 / 支払条件 / 銀行</td></tr>
+<tr><td>営業</td><td>案件 / 見積書 / 受注 / パイプライン</td></tr>
+<tr><td>購買</td><td>発注書 / 入荷</td></tr>
+<tr><td>在庫</td><td>在庫一覧 / 倉庫 / 出荷</td></tr>
+<tr><td>会計</td><td>仕訳 / 元帳 / PL / BS</td></tr>
+<tr><td>AR/AP</td><td>売掛金 / 買掛金 / 入金 / 支払</td></tr>
+<tr><td>人事</td><td>従業員 / 勤怠 / 休暇</td></tr>
+<tr><td>給与</td><td>給与計算 / 給与明細</td></tr>
+<tr><td>経費</td><td>経費申請 / 承認</td></tr>
+<tr><td>製造</td><td>BOM / 製造指示 / MRP</td></tr>
+</table>
+
+<h3>2.3 基本フロー: 見積書 → 受注 → 発注 → 入荷</h3>
+<ol>
+<li><strong>案件登録</strong> (営業 → 案件): 顧客・案件名・見込度・金額を入力</li>
+<li><strong>見積書作成</strong>: 案件と紐付け、明細・支払条件を入力</li>
+<li><strong>承認依頼 → 承認</strong>: Manager/Director が承認。承認者名+スタンプが PDF に表示</li>
+<li><strong>受注化</strong>: 承認済み見積書から Sales Order を生成</li>
+<li><strong>発注</strong>: 仕入先への発注書を作成</li>
+<li><strong>入荷処理</strong>: 入荷を記録して在庫更新</li>
+<li><strong>AR 請求書</strong>: 受注から請求書生成 → 入金処理</li>
+</ol>
+
+<h3>2.4 案件検索</h3>
+<p>案件一覧画面のフィルタ:</p>
+<ul>
+<li><strong>顧客</strong>: プルダウン選択</li>
+<li><strong>ステータス</strong>: Lead Identified ~ Closed Won 等</li>
+<li><strong>営業担当</strong>: プルダウン</li>
+<li><strong>案件名</strong>: 部分一致</li>
+<li><strong>金額</strong>: min ~ max</li>
+<li><strong>見込度</strong>: 0 ~ 100 %</li>
+<li><strong>フリー検索</strong>: Deal No / PJ No</li>
+</ul>
+
+<h3>2.5 PDF プレビュー / 印刷</h3>
+<ul>
+<li>「PDF」ボタンで新規タブプレビューが開く</li>
+<li>上部「Print / Save PDF」で印刷ダイアログ表示</li>
+<li>「Close」でタブを閉じる</li>
+<li>ファイル名 = 文書番号 (例: <code>QT-2026-0001.pdf</code>)</li>
+</ul>
+
+<h3>2.6 承認ワークフロー</h3>
+<ol>
+<li>作成者が「承認依頼」→ ステータス <code>PENDING_APPROVAL</code></li>
+<li>Manager / Director が「承認」ボタン押下</li>
+<li>承認後、PDF に承認者氏名 + スタンプ自動表示</li>
+</ol>
+
+<h3>2.7 言語切替</h3>
+<p>右上ユーザーメニュー → 日本語 / English / ไทย</p>
+
+<h3>2.8 バックアップ</h3>
+<pre># 定期バックアップ
+pg_dump -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD.sql
+pg_dump -U postgres -d pegasus_erp -Fc -f backups\pegasus_erp_YYYYMMDD.dump
+
+# リストア
+psql -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD.sql
+pg_restore -U postgres -d pegasus_erp -c backups\pegasus_erp_YYYYMMDD.dump</pre>
+
+<h2>第 3 部: トラブルシューティング</h2>
+<table>
+<tr><th>症状</th><th>対処</th></tr>
+<tr><td>ログインできない</td><td><code>users</code> テーブル確認、password ハッシュリセット</td></tr>
+<tr><td>PDF が白紙</td><td>ブラウザコンソール確認、ロゴパス確認</td></tr>
+<tr><td>承認者名が違う</td><td><code>link_users_employees.sql</code> を実行</td></tr>
+<tr><td>タイ語文字化け</td><td>DB エンコーディング UTF8、php.ini の mbstring 確認</td></tr>
+<tr><td>支払条件が出ない</td><td><code>payment_term_installments</code> 確認</td></tr>
+<tr><td>500 エラー</td><td>PHP エラーログ確認</td></tr>
+</table>
+
+<!-- ==================== ภาษาไทย ==================== -->
+<h1>【ภาษาไทย】PEGASUS ERP คู่มือ</h1>
+
+<h2>ส่วนที่ 1: ขั้นตอนการติดตั้ง</h2>
+
+<h3>1.1 ความต้องการของระบบ</h3>
+<table>
+<tr><th>รายการ</th><th>เวอร์ชันที่แนะนำ</th></tr>
+<tr><td>OS</td><td>Windows 10/11 หรือ Ubuntu 20.04+</td></tr>
+<tr><td>PHP</td><td>8.2 ขึ้นไป</td></tr>
+<tr><td>PostgreSQL</td><td>15 ขึ้นไป</td></tr>
+<tr><td>เบราว์เซอร์</td><td>Chrome / Edge เวอร์ชันล่าสุด</td></tr>
+<tr><td>หน่วยความจำ</td><td>4 GB ขึ้นไป</td></tr>
+<tr><td>พื้นที่ดิสก์</td><td>10 GB ขึ้นไป</td></tr>
+</table>
+
+<h3>1.2 ติดตั้ง PHP</h3>
+<ol>
+<li>ติดตั้ง PHP 8.2+ (Windows: <code>scoop install php</code>)</li>
+<li>เปิดใช้งานส่วนขยายใน <code>php.ini</code>:
+<pre>extension=pdo_pgsql
+extension=pgsql
+extension=mbstring
+extension=gd
+extension=fileinfo
+date.timezone = "Asia/Bangkok"</pre></li>
+<li>ตรวจสอบด้วย <code>php -v</code> และ <code>php -m | grep pgsql</code></li>
+</ol>
+
+<h3>1.3 ติดตั้ง PostgreSQL</h3>
+<ol>
+<li>ติดตั้ง PostgreSQL 15+</li>
+<li>สร้างฐานข้อมูล: <code>psql -U postgres -c "CREATE DATABASE pegasus_erp ENCODING 'UTF8';"</code></li>
+<li>Encoding ต้องเป็น UTF8 (รองรับภาษาไทย/ญี่ปุ่น)</li>
+</ol>
+
+<h3>1.4 วาง Source Code</h3>
+<p>แตกไฟล์ zip ไปยังโฟลเดอร์ (เช่น <code>C:\Pegasus_ERP_R1\</code>)</p>
+<pre>Pegasus_ERP_R1\
+├── config\          — การตั้งค่า DB
+├── controllers\     — Controllers
+├── core\            — Core framework
+├── database\        — Schema & SQL
+├── lang\            — ไฟล์ภาษา (en/ja/th)
+├── models\          — Models
+├── public\          — Web root
+├── views\           — Templates
+├── uploads\         — ไฟล์ที่ผู้ใช้อัปโหลด
+└── backups\         — สำรอง DB</pre>
+
+<h3>1.5 ตั้งค่าการเชื่อมต่อ DB</h3>
+<table>
+<tr><th>ตัวแปร</th><th>ค่าเริ่มต้น</th></tr>
+<tr><td>DB_HOST</td><td>localhost</td></tr>
+<tr><td>DB_PORT</td><td>5432</td></tr>
+<tr><td>DB_NAME</td><td>pegasus_erp</td></tr>
+<tr><td>DB_USER</td><td>postgres</td></tr>
+<tr><td>DB_PASS</td><td>postgres</td></tr>
+</table>
+
+<h3>1.6 เริ่มต้นฐานข้อมูล</h3>
+<pre>psql -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD_HHMMSS.sql</pre>
+<p>หรือใหม่: <code>setup-database.bat</code></p>
+
+<h3>1.7 เริ่ม Development Server</h3>
+<pre>start-server.bat
+หรือ
+php -S localhost:8080 -t public/</pre>
+<p>เปิดเบราว์เซอร์ไปที่ <code>http://localhost:8080</code></p>
+
+<h3>1.8 เข้าสู่ระบบครั้งแรก</h3>
+<table>
+<tr><th>รายการ</th><th>ค่า</th></tr>
+<tr><td>URL</td><td>http://localhost:8080/login</td></tr>
+<tr><td>ชื่อผู้ใช้</td><td>admin</td></tr>
+<tr><td>รหัสผ่าน</td><td>admin123</td></tr>
+</table>
+<div class="note"><strong>สำคัญ:</strong> กรุณาเปลี่ยนรหัสผ่านทันทีหลังเข้าสู่ระบบครั้งแรก</div>
+
+<h2>ส่วนที่ 2: คู่มือการใช้งาน</h2>
+
+<h3>2.1 โครงสร้างหน้าจอ</h3>
+<ul>
+<li><strong>Header</strong>: โลโก้ + ชื่อหน้า + วันที่ + ค้นหา + เมนูผู้ใช้</li>
+<li><strong>Sidebar</strong>: เมนูตามโมดูล</li>
+<li><strong>Content</strong>: หน้าฟังก์ชันที่เลือก</li>
+</ul>
+
+<h3>2.2 รายการโมดูล</h3>
+<table>
+<tr><th>โมดูล</th><th>ฟังก์ชัน</th></tr>
+<tr><td>Dashboard</td><td>KPI / กระแสเงินสด / พยากรณ์ยอดขาย / ลูกค้าหลัก</td></tr>
+<tr><td>Master</td><td>แผนก / พนักงาน / สินค้า / ลูกค้า / ผู้ขาย / ผังบัญชี / เงื่อนไขชำระ / ธนาคาร</td></tr>
+<tr><td>Sales</td><td>ดีล / ใบเสนอราคา / คำสั่งขาย / Pipeline</td></tr>
+<tr><td>Purchasing</td><td>ใบสั่งซื้อ / รับสินค้า</td></tr>
+<tr><td>Inventory</td><td>สต๊อก / คลัง / จัดส่ง</td></tr>
+<tr><td>Accounting</td><td>สมุดรายวัน / แยกประเภท / PL / BS</td></tr>
+<tr><td>AR/AP</td><td>ลูกหนี้ / เจ้าหนี้ / รับชำระ / จ่ายชำระ</td></tr>
+<tr><td>HR</td><td>พนักงาน / เวลาทำงาน / ลา</td></tr>
+<tr><td>Payroll</td><td>คำนวณเงินเดือน / สลิป</td></tr>
+<tr><td>Expense</td><td>เบิกค่าใช้จ่าย / อนุมัติ</td></tr>
+<tr><td>Production</td><td>BOM / ใบสั่งผลิต / MRP</td></tr>
+</table>
+
+<h3>2.3 Flow พื้นฐาน</h3>
+<ol>
+<li><strong>สร้างดีล</strong>: กรอกลูกค้า/ชื่อดีล/โอกาส/จำนวนเงิน</li>
+<li><strong>สร้างใบเสนอราคา</strong>: เชื่อมกับดีล, กรอกรายการ/เงื่อนไขชำระ</li>
+<li><strong>ขออนุมัติ → อนุมัติ</strong>: Manager/Director อนุมัติ</li>
+<li><strong>แปลงเป็นคำสั่งขาย</strong>: สร้าง Sales Order จากใบเสนอราคา</li>
+<li><strong>ใบสั่งซื้อ</strong>: สร้าง PO ไปยังผู้ขาย</li>
+<li><strong>รับสินค้า</strong>: บันทึก GR → อัปเดตสต๊อก</li>
+<li><strong>AR Invoice</strong>: ออกใบแจ้งหนี้ → รับชำระ</li>
+</ol>
+
+<h3>2.4 การค้นหาดีล</h3>
+<ul>
+<li><strong>ลูกค้า</strong>: dropdown</li>
+<li><strong>สถานะ</strong>: dropdown (Lead Identified ~ Closed Won)</li>
+<li><strong>ผู้ขาย</strong>: dropdown</li>
+<li><strong>ชื่อดีล</strong>: partial match</li>
+<li><strong>จำนวนเงิน</strong>: min ~ max</li>
+<li><strong>โอกาส</strong>: 0 ~ 100 %</li>
+<li><strong>ค้นหาอิสระ</strong>: Deal No / PJ No</li>
+</ul>
+
+<h3>2.5 PDF Preview / พิมพ์</h3>
+<ul>
+<li>กด "PDF" → preview แท็บใหม่</li>
+<li>"Print / Save PDF" → พิมพ์/บันทึก</li>
+<li>"Close" → ปิดแท็บ</li>
+<li>ชื่อไฟล์ = หมายเลขเอกสาร (เช่น <code>QT-2026-0001.pdf</code>)</li>
+</ul>
+
+<h3>2.6 Workflow การอนุมัติ</h3>
+<ol>
+<li>กด "ขออนุมัติ" → สถานะ <code>PENDING_APPROVAL</code></li>
+<li>Manager/Director กด "อนุมัติ"</li>
+<li>หลังอนุมัติ ชื่อผู้อนุมัติ + ตราประทับแสดงบน PDF</li>
+</ol>
+
+<h3>2.7 เปลี่ยนภาษา</h3>
+<p>เมนูผู้ใช้ด้านขวาบน → 日本語 / English / ไทย</p>
+
+<h3>2.8 การสำรองข้อมูล</h3>
+<pre># สำรอง
+pg_dump -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD.sql
+pg_dump -U postgres -d pegasus_erp -Fc -f backups\pegasus_erp_YYYYMMDD.dump
+
+# กู้คืน
+psql -U postgres -d pegasus_erp -f backups\pegasus_erp_YYYYMMDD.sql
+pg_restore -U postgres -d pegasus_erp -c backups\pegasus_erp_YYYYMMDD.dump</pre>
+
+<h2>ส่วนที่ 3: การแก้ปัญหา</h2>
+<table>
+<tr><th>อาการ</th><th>วิธีแก้</th></tr>
+<tr><td>เข้าสู่ระบบไม่ได้</td><td>ตรวจสอบตาราง <code>users</code>, reset password hash</td></tr>
+<tr><td>PDF ว่างเปล่า</td><td>ตรวจสอบ browser console, path ของโลโก้</td></tr>
+<tr><td>ชื่อผู้อนุมัติไม่ถูกต้อง</td><td>รัน <code>link_users_employees.sql</code></td></tr>
+<tr><td>ภาษาไทยเพี้ยน</td><td>encoding DB = UTF8, ตรวจ mbstring</td></tr>
+<tr><td>ไม่แสดงเงื่อนไขชำระ</td><td>ตรวจสอบตาราง <code>payment_term_installments</code></td></tr>
+<tr><td>500 error</td><td>ตรวจสอบ PHP error log</td></tr>
+</table>
+
+<p style="margin-top:40pt;color:#757575;font-size:9pt;text-align:center;">
+Tomas Tech Co., Ltd. — PEGASUS ERP v3.0 — 2026-04-16
+</p>
+
+</body>
+</html>

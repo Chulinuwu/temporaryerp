@@ -1,0 +1,398 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  PEGASUS ERP — Full infrastructure stack (VPC uses default, creates EC2 + RDS + S3 + SGs)
+  Account: 889629667447  Region: ap-southeast-1
+
+Parameters:
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 key pair for SSH access (create in console first).
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+
+  MyIPAddress:
+    Type: String
+    Description: Your public IPv4 address for SSH access (whatismyip.com). Use /32 CIDR.
+    Default: 0.0.0.0/0
+    AllowedPattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/(32|[0-2]?[0-9])$'
+    ConstraintDescription: Must be a valid CIDR in x.x.x.x/x format.
+
+  DBMasterPassword:
+    Type: String
+    Description: Master password for RDS (min 12 chars, mixed case + digit + symbol)
+    NoEcho: true
+    MinLength: 12
+    MaxLength: 41
+    AllowedPattern: '^[a-zA-Z0-9!#$%&()*+,\-.:;<=>?@\[\]^_`{|}~]+$'
+    ConstraintDescription: 12-41 chars, alphanumeric + common symbols (no spaces or quotes).
+
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.small, t3.medium, t3.large]
+    Description: EC2 instance type.
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.small
+    AllowedValues: [db.t3.micro, db.t3.small, db.t3.medium]
+    Description: RDS instance class.
+
+Mappings:
+  # Ubuntu 22.04 LTS AMD64 AMI per region (Canonical official, check periodically)
+  RegionMap:
+    ap-southeast-1:
+      UbuntuAMI: ami-0fa377108253bf620
+    ap-northeast-1:
+      UbuntuAMI: ami-0f5d7ea037d30918a
+    us-east-1:
+      UbuntuAMI: ami-0a0e5d9c7acc336f1
+
+Resources:
+
+  # ---------------- Networking ----------------
+  # Use default VPC; look up default VPC via SSM is complex, so create a dedicated VPC for clarity
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - { Key: Name, Value: pegasus-vpc }
+        - { Key: Project, Value: PEGASUS-ERP }
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: pegasus-igw }]
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.20.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: pegasus-public-1 }]
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.20.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: pegasus-public-2 }]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags: [{ Key: Name, Value: pegasus-public-rt }]
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  AssocRT1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PublicSubnet1, RouteTableId: !Ref PublicRouteTable }
+
+  AssocRT2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PublicSubnet2, RouteTableId: !Ref PublicRouteTable }
+
+  # ---------------- Security Groups ----------------
+  WebSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PEGASUS ERP web server
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 22,  ToPort: 22,  CidrIp: !Ref MyIPAddress, Description: SSH }
+        - { IpProtocol: tcp, FromPort: 80,  ToPort: 80,  CidrIp: 0.0.0.0/0,        Description: HTTP }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0,        Description: HTTPS }
+      Tags: [{ Key: Name, Value: sg-pegasus-web }]
+
+  DBSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PEGASUS ERP RDS
+      VpcId: !Ref VPC
+      Tags: [{ Key: Name, Value: sg-pegasus-db }]
+
+  DBSGIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DBSG
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref WebSG
+      Description: Postgres from EC2
+
+  # ---------------- S3 Buckets ----------------
+  BackupBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub pegasus-backups-${AWS::AccountId}
+      VersioningConfiguration: { Status: Enabled }
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DailyRetention
+            Status: Enabled
+            Prefix: daily/
+            Transitions:
+              - { TransitionInDays: 30,  StorageClass: STANDARD_IA }
+              - { TransitionInDays: 90,  StorageClass: GLACIER }
+            ExpirationInDays: 365
+          - Id: SourceRetention
+            Status: Enabled
+            Prefix: source/
+            Transitions:
+              - { TransitionInDays: 60, StorageClass: GLACIER }
+            ExpirationInDays: 730
+
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub pegasus-uploads-${AWS::AccountId}
+      VersioningConfiguration: { Status: Enabled }
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ---------------- IAM ----------------
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: PegasusEC2Role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: PegasusS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::pegasus-backups-${AWS::AccountId}
+                  - !Sub arn:aws:s3:::pegasus-backups-${AWS::AccountId}/*
+                  - !Sub arn:aws:s3:::pegasus-uploads-${AWS::AccountId}
+                  - !Sub arn:aws:s3:::pegasus-uploads-${AWS::AccountId}/*
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  EC2Profile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: PegasusEC2Profile
+      Roles: [!Ref EC2Role]
+
+  # ---------------- RDS ----------------
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: PEGASUS ERP DB subnets
+      SubnetIds: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+      Tags: [{ Key: Name, Value: pegasus-db-subnet-group }]
+
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: pegasus-erp-prod
+      Engine: postgres
+      EngineVersion: '15.7'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: '20'
+      MaxAllocatedStorage: 100
+      StorageType: gp3
+      StorageEncrypted: true
+      DBName: pegasus_erp
+      MasterUsername: pegasus_admin
+      MasterUserPassword: !Ref DBMasterPassword
+      VPCSecurityGroups: [!Ref DBSG]
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      PreferredBackupWindow: '17:00-18:00'  # 00:00-01:00 Bangkok
+      PreferredMaintenanceWindow: 'Sun:18:00-Sun:19:00'  # Mon 01:00-02:00 Bangkok
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: true
+      Tags:
+        - { Key: Name, Value: pegasus-erp-prod }
+        - { Key: Project, Value: PEGASUS-ERP }
+
+  # ---------------- EC2 ----------------
+  WebEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags: [{ Key: Name, Value: pegasus-eip }]
+
+  WebInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', UbuntuAMI]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
+      IamInstanceProfile: !Ref EC2Profile
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds: [!Ref WebSG]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs: { VolumeType: gp3, VolumeSize: 50, DeleteOnTermination: true }
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          exec > >(tee -a /var/log/pegasus-init.log) 2>&1
+          export DEBIAN_FRONTEND=noninteractive
+
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y nginx php8.2-fpm php8.2-pgsql php8.2-mbstring \
+              php8.2-gd php8.2-xml php8.2-curl php8.2-zip php8.2-intl \
+              postgresql-client-15 unzip git curl jq awscli \
+              certbot python3-certbot-nginx ufw fail2ban
+
+          ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw --force enable
+          timedatectl set-timezone Asia/Bangkok
+
+          mkdir -p /var/www/pegasus_erp/public/uploads/business_cards
+          mkdir -p /var/www/pegasus_erp/uploads/cost_imports
+          mkdir -p /var/www/pegasus_erp/backups
+          chown -R www-data:www-data /var/www/pegasus_erp
+          chmod -R 775 /var/www/pegasus_erp/public/uploads \
+                       /var/www/pegasus_erp/uploads \
+                       /var/www/pegasus_erp/backups
+
+          cat > /etc/php/8.2/fpm/conf.d/99-pegasus.ini <<'PHPCONF'
+          memory_limit = 256M
+          upload_max_filesize = 32M
+          post_max_size = 32M
+          date.timezone = Asia/Bangkok
+          session.gc_maxlifetime = 7200
+          session.cookie_httponly = 1
+          display_errors = Off
+          log_errors = On
+          error_log = /var/log/php_errors.log
+          PHPCONF
+
+          cat > /etc/nginx/sites-available/pegasus <<'NGX'
+          server {
+              listen 80 default_server;
+              server_name _;
+              root /var/www/pegasus_erp/public;
+              index index.php index.html;
+              client_max_body_size 32M;
+              location ~ /\.(env|git|ht) { deny all; return 404; }
+              location ~* \.(log|sql|dump|bak|sh)$ { deny all; return 404; }
+              location ^~ /backups/ { deny all; return 404; }
+              location / { try_files $uri $uri/ /index.php?$query_string; }
+              location ~ \.php$ {
+                  include snippets/fastcgi-php.conf;
+                  fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+                  fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+              }
+          }
+          NGX
+          rm -f /etc/nginx/sites-enabled/default
+          ln -sf /etc/nginx/sites-available/pegasus /etc/nginx/sites-enabled/pegasus
+
+          cat > /var/www/pegasus_erp/public/index.php <<'PHP'
+          <?php
+          header('Content-Type: text/plain');
+          echo "PEGASUS ERP — Cloud-init complete\n";
+          echo "Server: " . php_uname('n') . "\nPHP: " . PHP_VERSION . "\nTime: " . date('c') . "\n";
+          PHP
+
+          chown -R www-data:www-data /var/www/pegasus_erp
+          nginx -t && systemctl restart nginx php8.2-fpm
+          systemctl enable nginx php8.2-fpm fail2ban
+
+          echo "==> PEGASUS cloud-init DONE"
+      Tags:
+        - { Key: Name, Value: pegasus-erp-web }
+        - { Key: Project, Value: PEGASUS-ERP }
+
+  EIPAssoc:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt WebEIP.AllocationId
+      InstanceId: !Ref WebInstance
+
+# ---------------- Outputs ----------------
+Outputs:
+  EC2PublicIP:
+    Description: Elastic IP of the web server (use for SSH and DNS)
+    Value: !Ref WebEIP
+
+  EC2DnsName:
+    Description: Public DNS of the EC2 instance
+    Value: !GetAtt WebInstance.PublicDnsName
+
+  RDSEndpoint:
+    Description: RDS PostgreSQL endpoint (use in .env)
+    Value: !GetAtt DBInstance.Endpoint.Address
+
+  RDSPort:
+    Value: !GetAtt DBInstance.Endpoint.Port
+
+  BackupBucketName:
+    Description: S3 bucket for backups
+    Value: !Ref BackupBucket
+
+  UploadBucketName:
+    Description: S3 bucket for user uploads
+    Value: !Ref UploadBucket
+
+  SSHCommand:
+    Description: SSH connection command
+    Value: !Sub 'ssh -i ${KeyPairName}.pem ubuntu@${WebEIP}'
+
+  WebURL:
+    Description: Open this URL after deployment to verify
+    Value: !Sub 'http://${WebEIP}/'
