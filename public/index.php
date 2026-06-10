@@ -43,6 +43,17 @@ ini_set('display_errors', 1);
 
 // Autoload core files
 require_once BASE_PATH . '/core/Helpers.php';
+require_once BASE_PATH . '/core/Env.php';
+require_once BASE_PATH . '/core/Logger.php';
+
+// Load optional .env (real environment wins; config/*.php hold the defaults)
+Env::load(BASE_PATH . '/.env');
+
+// Bootstrap logging before anything else so errors during setup are captured
+Logger::init(require BASE_PATH . '/config/logging.php');
+Logger::registerHandlers();
+Logger::logRequest();
+
 require_once BASE_PATH . '/core/Database.php';
 require_once BASE_PATH . '/core/Model.php';
 require_once BASE_PATH . '/core/Auth.php';

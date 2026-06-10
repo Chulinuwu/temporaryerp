@@ -21,3 +21,9 @@ _*.json
 # --- Logs / temp ---
 *.log
 *.tmp
+
+.omc
+.omx
+
+outsource_pegasus
+logs

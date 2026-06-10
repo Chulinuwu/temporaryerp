@@ -25,6 +25,9 @@ class Database
         try {
             $this->pdo = new PDO($dsn, $config['username'], $config['password'], $config['options']);
         } catch (PDOException $e) {
+            if (class_exists('Logger')) {
+                Logger::critical('DB connection failed', ['error' => $e->getMessage()]);
+            }
             error_log('PEGASUS DB Connection Error: ' . $e->getMessage());
             throw new RuntimeException('Database connection failed. Please check configuration.');
         }
@@ -69,6 +72,9 @@ class Database
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
+            if (class_exists('Logger')) {
+                Logger::error('SQL error: ' . $e->getMessage(), ['sql' => $sql, 'params' => $params]);
+            }
             error_log('PEGASUS Query Error: ' . $e->getMessage() . ' | SQL: ' . $sql);
             throw $e;
         }

@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pegasus_db
+    environment:
+      POSTGRES_DB: pegasus_erp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pegasus_pgdata:/var/lib/postgresql/data
+      # Run only on first init (when the data volume is empty), in filename order
+      - ./database/main/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/seed/docker_load.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      # Seed data referenced by 02-seed.sql via \i /seed/...
+      - ./database/seed:/seed:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pegasus_erp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pegasus_pgdata:

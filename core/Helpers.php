@@ -423,3 +423,13 @@ function asset($path)
 {
     return '/' . ltrim($path, '/');
 }
+
+/**
+ * Write an application log line. Level: debug|info|warning|error|critical.
+ */
+function logger(string $level, string $message, array $context = [])
+{
+    if (class_exists('Logger')) {
+        Logger::log($level, $message, $context);
+    }
+}

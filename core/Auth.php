@@ -22,10 +22,16 @@ class Auth
         );
 
         if (!$user) {
+            if (class_exists('Logger')) {
+                Logger::warning('Login failed', ['username' => $username, 'reason' => 'no active user']);
+            }
             return false;
         }
 
         if (!password_verify($password, $user['password_hash'])) {
+            if (class_exists('Logger')) {
+                Logger::warning('Login failed', ['username' => $username, 'reason' => 'bad password', 'user_id' => $user['user_id']]);
+            }
             return false;
         }
 
@@ -47,6 +53,10 @@ class Auth
         // Update last login timestamp
         $db->update('users', ['last_login' => date('Y-m-d H:i:s')], ['user_id' => $user['user_id']]);
 
+        if (class_exists('Logger')) {
+            Logger::info('Login success', ['user_id' => $user['user_id'], 'username' => $user['username'], 'role' => $user['role'] ?? null]);
+        }
+
         return true;
     }
 
@@ -57,6 +67,10 @@ class Auth
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
+        }
+
+        if (class_exists('Logger') && !empty($_SESSION['user_id'])) {
+            Logger::info('Logout', ['user_id' => $_SESSION['user_id']]);
         }
 
         $_SESSION = [];

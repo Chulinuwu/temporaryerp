@@ -28,25 +28,22 @@ cd temporaryerp
 ```
 
 ### 2. สร้างฐานข้อมูล PostgreSQL
+
+**ทางที่แนะนำ: Docker** (ได้ schema ปัจจุบันทั้งหมดในคำสั่งเดียว)
 ```bash
-# สร้าง database
+docker compose up -d
+```
+ตัว compose จะสร้าง PostgreSQL 16 + โหลด `database/main/init.sql` (schema ปัจจุบันทั้งก้อน) อัตโนมัติตอน boot ครั้งแรก
+
+**หรือมี PostgreSQL อยู่แล้ว:**
+```bash
 createdb -U postgres pegasus_erp
-
-# import schema (ตามลำดับ)
-psql -U postgres -d pegasus_erp -f database/schema.sql
-psql -U postgres -d pegasus_erp -f database/schema_crm.sql
-psql -U postgres -d pegasus_erp -f database/schema_crm_v2.sql
-psql -U postgres -d pegasus_erp -f database/schema_projects.sql
-psql -U postgres -d pegasus_erp -f database/schema_project_costs.sql
-psql -U postgres -d pegasus_erp -f database/schema_bi.sql
-
-# seed ข้อมูลตั้งต้น
-psql -U postgres -d pegasus_erp -f database/seed.sql
-psql -U postgres -d pegasus_erp -f database/seed_crm.sql
-psql -U postgres -d pegasus_erp -f database/seed_employees.sql
+psql -U postgres -d pegasus_erp -f database/main/init.sql
 ```
 
-> โฟลเดอร์ `database/` ยังมีไฟล์ `add_*.sql` / `migrate_*.sql` เพิ่มเติม — ใช้ตามฟีเจอร์ที่ต้องการ (ดูคู่มือใน `docs/`)
+> `database/main/init.sql` คือ schema เดียวที่ต้องรัน (รวม extension + ทุกตาราง/index/trigger/view)
+> รายละเอียดโครงสร้างโฟลเดอร์ `database/` (canonical / seed / legacy) ดูใน [`reference/db.md`](reference/db.md)
+> ข้อมูล master/seed ตั้งต้นอยู่ใน `database/seed/` (ออปชัน)
 
 ### 3. ตั้งค่าการเชื่อมต่อฐานข้อมูล
 ไฟล์ [`config/database.php`](config/database.php) อ่านค่าจาก environment variables โดยมีค่า default สำหรับ dev:
@@ -59,10 +56,18 @@ psql -U postgres -d pegasus_erp -f database/seed_employees.sql
 | `DB_USER` | `postgres` |
 | `DB_PASS` | `postgres` |
 
-ถ้า PostgreSQL ของคุณใช้ค่าตามนี้อยู่แล้ว ข้ามขั้นตอนนี้ได้เลย ไม่งั้นตั้ง env ก่อนรัน เช่น:
+ถ้า PostgreSQL ของคุณใช้ค่าตามนี้อยู่แล้ว ข้ามขั้นตอนนี้ได้เลย ไม่งั้นเลือกวิธีใดวิธีหนึ่ง:
+
+ตั้ง environment variable ก่อนรัน:
 ```powershell
 $env:DB_USER = "myuser"; $env:DB_PASS = "mypassword"
 ```
+
+หรือ copy `.env.example` เป็น `.env` แล้วแก้ค่า (แอปโหลดให้อัตโนมัติ ค่าใน OS env ชนะ `.env` เสมอ):
+```bash
+cp .env.example .env
+```
+> ไฟล์ `.env` ใส่ได้ทั้งค่า DB และ logging (`LOG_LEVEL`, `LOG_RETENTION_DAYS`, ...) ดู [`reference/logging.md`](reference/logging.md)
 
 ### 4. รันเซิร์ฟเวอร์
 ```bash
