@@ -17,43 +17,46 @@
 
     <div class="card" style="padding:20px;">
         <div class="form-grid" style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:16px;">
-            <div class="form-group">
-                <label><?= _e('department') ?></label>
-                <input type="text" name="department" class="form-input" maxlength="100">
-            </div>
-            <div class="form-group">
-                <label><?= _e('needed_by') ?></label>
-                <input type="date" name="needed_by_date" class="form-input">
-            </div>
-            <div class="form-group">
-                <label><?= _e('suggested_supplier') ?></label>
-                <select name="suggested_supplier_id" class="form-select">
-                    <option value="">— <?= _e('none') ?> —</option>
-                    <?php foreach ($suppliers as $s): ?>
-                        <option value="<?= (int)$s['supplier_id'] ?>"><?= htmlspecialchars($s['supplier_code'] . ' / ' . $s['supplier_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label><?= _e('project') ?? 'プロジェクト' ?></label>
-                <select name="project_id" class="form-select">
-                    <option value="">— <?= _e('none') ?> —</option>
-                    <?php foreach (($projects ?? []) as $p): ?>
-                        <option value="<?= (int)$p['project_id'] ?>">
-                            <?= htmlspecialchars($p['pj_no'] . ' / ' . $p['pj_name']
-                                . (!empty($p['customer_name']) ? ' (' . $p['customer_name'] . ')' : '')) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group" style="grid-column:1/-1;">
-                <label><?= _e('justification') ?></label>
-                <textarea name="justification" class="form-input" rows="3" required></textarea>
-            </div>
-            <div class="form-group" style="grid-column:1/-1;">
-                <label><?= _e('notes') ?></label>
-                <textarea name="notes" class="form-input" rows="2"></textarea>
-            </div>
+<?php
+            $noneLabel = '— ' . _e('none') . ' —';
+            $deptOptions = array_map(fn($d) => ['value' => $d['department_name'], 'label' => $d['department_name']], $departments ?? []);
+            $supplierOptions = array_map(fn($s) => [
+                'value' => (int)$s['supplier_id'],
+                'label' => $s['supplier_code'] . ' / ' . $s['supplier_name'],
+            ], $suppliers ?? []);
+            $projectOptions = array_map(fn($p) => [
+                'value' => (int)$p['project_id'],
+                'label' => $p['pj_no'] . ' / ' . $p['pj_name'] . (!empty($p['customer_name']) ? ' (' . $p['customer_name'] . ')' : ''),
+            ], $projects ?? []);
+            ?>
+            <?= Form::select('department', _e('department'), $deptOptions, [
+                'value' => $pr['department'] ?? '',
+                'addable' => true,
+                'none_text' => _e('none'),
+                'add_label' => 'Create department "%s"',
+            ]) ?>
+            <?= Form::datetime('needed_by_date', _e('needed_by'), [
+                'mode' => 'date',
+                'value' => $pr['needed_by_date'] ?? '',
+            ]) ?>
+            <?= Form::select('suggested_supplier_id', _e('suggested_supplier'), $supplierOptions, [
+                'value' => $pr['suggested_supplier_id'] ?? '',
+                'none_label' => $noneLabel,
+            ]) ?>
+            <?= Form::select('project_id', _e('project'), $projectOptions, [
+                'value' => $pr['project_id'] ?? '',
+                'none_label' => $noneLabel,
+            ]) ?>
+            <?= Form::textarea('justification', _e('justification'), [
+                'value' => $pr['justification'] ?? '',
+                'required' => true,
+                'col' => '1/-1',
+            ]) ?>
+            <?= Form::textarea('notes', _e('notes'), [
+                'value' => $pr['notes'] ?? '',
+                'rows' => 2,
+                'col' => '1/-1',
+            ]) ?>
         </div>
     </div>
 

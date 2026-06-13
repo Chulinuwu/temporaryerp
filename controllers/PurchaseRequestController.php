@@ -229,12 +229,17 @@ class PurchaseRequestController extends Controller
              WHERE COALESCE(p.status,'ACTIVE') <> 'CANCELLED'
              ORDER BY p.pj_no DESC LIMIT 500"
         ) ?: [];
+        $departments = $this->db->fetchAll(
+            "SELECT department_name FROM departments
+             WHERE COALESCE(is_deleted, FALSE) = FALSE ORDER BY department_name"
+        ) ?: [];
         $this->render('purchasing/request_form', [
-            'pageTitle' => __('pr_new'),
-            'pr'        => null,
-            'lines'     => [],
-            'suppliers' => $suppliers,
-            'projects'  => $projects,
+            'pageTitle'   => __('pr_new'),
+            'pr'          => null,
+            'lines'       => [],
+            'suppliers'   => $suppliers,
+            'projects'    => $projects,
+            'departments' => $departments,
             'attachments' => [],
         ]);
     }

@@ -1,0 +1,310 @@
+/* ==========================================================
+   PEGASUS ERP - Custom form components (select + date picker)
+   Vanilla widgets driven by public/js/components.js.
+   ========================================================== */
+
+.cmp {
+    position: relative;
+}
+
+/* Trigger shared by select + date picker (mirrors .form-input look) */
+.cmp-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    text-align: left;
+    color: var(--color-text-primary);
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cmp-trigger:hover {
+    border-color: var(--color-text-muted);
+}
+
+.cmp.is-open .cmp-trigger,
+.cmp-trigger:focus-visible {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+    outline: none;
+}
+
+.cmp.is-error .cmp-trigger {
+    border-color: var(--color-danger);
+}
+
+.cmp-trigger-value {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cmp-trigger.is-placeholder .cmp-trigger-value {
+    color: var(--color-text-muted);
+}
+
+.cmp-trigger-icon {
+    flex: 0 0 auto;
+    color: var(--color-text-secondary);
+    display: inline-flex;
+}
+
+.cmp.is-open .cmp-caret {
+    transform: rotate(180deg);
+}
+
+.cmp-caret {
+    transition: transform 0.15s;
+}
+
+/* Floating panel shared by both widgets */
+.cmp-panel {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.cmp-panel[hidden] {
+    display: none;
+}
+
+/* ---------- Select ---------- */
+.cmp-search {
+    padding: 8px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.cmp-search input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 13px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    outline: none;
+}
+
+.cmp-search input:focus {
+    border-color: var(--color-primary);
+}
+
+.cmp-options {
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.cmp-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.cmp-option:hover,
+.cmp-option.is-active {
+    background: var(--color-content-bg);
+}
+
+.cmp-option.is-selected {
+    font-weight: 600;
+}
+
+.cmp-option.is-selected::after {
+    content: "\2713";
+    color: var(--color-primary);
+}
+
+.cmp-option[hidden] {
+    display: none;
+}
+
+.cmp-empty {
+    padding: 14px 12px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+.cmp-footer {
+    border-top: 1px solid var(--color-border-light);
+    padding: 4px;
+}
+
+.cmp-add-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--color-primary);
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.cmp-add-action:hover {
+    background: var(--color-primary-light);
+}
+
+.cmp-add-action .cmp-plus {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* ---------- Date picker ---------- */
+.cmp-cal {
+    padding: 12px;
+    width: 260px;
+}
+
+.cmp-cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.cmp-cal-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.cmp-cal-nav {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+}
+
+.cmp-cal-nav:hover {
+    background: var(--color-content-bg);
+}
+
+.cmp-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.cmp-cal-dow {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: 4px 0;
+}
+
+.cmp-cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+}
+
+.cmp-cal-day:hover {
+    background: var(--color-content-bg);
+}
+
+.cmp-cal-day.is-muted {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+}
+
+.cmp-cal-day.is-today {
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.cmp-cal-day.is-selected {
+    background: var(--color-primary);
+    color: #FFFFFF;
+}
+
+.cmp-cal-day[hidden] {
+    visibility: hidden;
+}
+
+.cmp-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border-light);
+}
+
+.cmp-time label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-right: auto;
+}
+
+.cmp-time select {
+    padding: 5px 8px;
+    font-size: 13px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: #FFFFFF;
+}
+
+.cmp-cal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.cmp-cal-actions button {
+    font-size: 13px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.cmp-cal-clear {
+    color: var(--color-text-secondary);
+}
+
+.cmp-cal-today {
+    color: var(--color-primary);
+    font-weight: 600;
+}

@@ -16,6 +16,7 @@
 
     <!-- App CSS -->
     <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components.css') ?>">
 
     <!-- CSRF Token for AJAX -->
     <meta name="csrf-token" content="<?= csrf_token() ?>">
@@ -77,5 +78,6 @@
 
 <!-- App JS -->
 <script src="<?= asset('js/app.js') ?>"></script>
+<script src="<?= asset('js/components.js') ?>"></script>
 </body>
 </html>

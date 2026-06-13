@@ -86,80 +86,63 @@ $pageTitle = ($isEdit ? __('edit_po') . " #{$order['po_no']}" : __('new_purchase
         </div>
         <div class="card-body">
             <div class="form-grid-2">
+                <?php
+                $poSupplierOptions = array_map(fn($s) => ['value' => $s['supplier_id'], 'label' => $s['supplier_name'] ?? ''], $suppliers ?? []);
+                $poCurrencyOptions = array_map(fn($c) => ['value' => $c['code'], 'label' => $c['code']], $currencies ?? [['code' => 'THB'], ['code' => 'USD'], ['code' => 'JPY']]);
+                $poTermOptions = array_map(fn($pt) => ['value' => $pt['term_id'], 'label' => $pt['term_name_en']], $paymentTerms ?? []);
+                $poProjectOptions = array_map(function ($p) {
+                    $label = $p['pj_no'];
+                    if (!empty($p['pj_name'])) { $label .= ' — ' . mb_substr($p['pj_name'], 0, 40); }
+                    if (!empty($p['customer_name'])) { $label .= ' (' . mb_substr($p['customer_name'], 0, 25) . ')'; }
+                    return ['value' => $p['project_id'], 'label' => $label];
+                }, $projects ?? []);
+                ?>
                 <!-- Left Column -->
-                <div class="form-group">
-                    <label class="form-label"><?= _e('supplier') ?> <span class="required">*</span></label>
-                    <select name="supplier_id" class="form-select <?= !empty($errors['supplier_id']) ? 'error' : '' ?>" required>
-                        <option value="">-- <?= _e('select_supplier') ?> --</option>
-                        <?php foreach ($suppliers ?? [] as $s): ?>
-                            <option value="<?= htmlspecialchars($s['supplier_id']) ?>" <?= ($order['supplier_id'] ?? '') == $s['supplier_id'] ? 'selected' : '' ?>>
-                                <?= e($s['supplier_name'] ?? '') ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <?php if (!empty($errors['supplier_id'])): ?>
-                        <div class="form-error"><?= htmlspecialchars($errors['supplier_id']) ?></div>
-                    <?php endif; ?>
-                </div>
+                <?= Form::select('supplier_id', _e('supplier'), $poSupplierOptions, [
+                    'value' => $order['supplier_id'] ?? '',
+                    'required' => true,
+                    'none_label' => '-- ' . _e('select_supplier') . ' --',
+                    'error' => $errors['supplier_id'] ?? false,
+                ]) ?>
 
-                <div class="form-group">
-                    <label class="form-label"><?= _e('order_date') ?> <span class="required">*</span></label>
-                    <input type="date" name="order_date" class="form-input" value="<?= htmlspecialchars($order['order_date'] ?? date('Y-m-d')) ?>" required>
-                </div>
+                <?= Form::datetime('order_date', _e('order_date'), [
+                    'mode' => 'date',
+                    'value' => $order['order_date'] ?? date('Y-m-d'),
+                    'required' => true,
+                ]) ?>
 
-                <div class="form-group">
-                    <label class="form-label"><?= _e('contact_person') ?></label>
-                    <input type="text" name="contact_person_name" class="form-input" value="<?= htmlspecialchars($order['contact_person_name'] ?? '') ?>" placeholder="<?= _e('supplier_contact') ?>">
-                </div>
+                <?= Form::text('contact_person_name', _e('contact_person'), [
+                    'value' => $order['contact_person_name'] ?? '',
+                    'placeholder' => _e('supplier_contact'),
+                ]) ?>
 
-                <div class="form-group">
-                    <label class="form-label"><?= _e('delivery_date') ?></label>
-                    <input type="date" name="delivery_date" class="form-input" value="<?= htmlspecialchars($order['delivery_date'] ?? '') ?>">
-                </div>
+                <?= Form::datetime('delivery_date', _e('delivery_date'), [
+                    'mode' => 'date',
+                    'value' => $order['delivery_date'] ?? '',
+                ]) ?>
 
-                <div class="form-group">
-                    <label class="form-label"><?= _e('currency') ?></label>
-                    <select name="currency_code" class="form-select">
-                        <?php foreach ($currencies ?? [['code' => 'THB'],['code' => 'USD'],['code' => 'JPY']] as $cur): ?>
-                            <option value="<?= htmlspecialchars($cur['code']) ?>" <?= ($order['currency_code'] ?? 'THB') === $cur['code'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cur['code']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <?= Form::select('currency_code', _e('currency'), $poCurrencyOptions, [
+                    'value' => $order['currency_code'] ?? 'THB',
+                    'none_label' => null,
+                ]) ?>
 
-                <div class="form-group">
-                    <label class="form-label"><?= _e('payment_terms') ?></label>
-                    <select name="payment_term_id" class="form-select">
-                        <option value="">-- <?= _e('select') ?> --</option>
-                        <?php foreach ($paymentTerms ?? [] as $pt): ?>
-                            <option value="<?= htmlspecialchars($pt['term_id']) ?>" <?= ($order['payment_term_id'] ?? '') == $pt['term_id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($pt['term_name_en']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <?= Form::select('payment_term_id', _e('payment_terms'), $poTermOptions, [
+                    'value' => $order['payment_term_id'] ?? '',
+                    'none_label' => '-- ' . _e('select') . ' --',
+                ]) ?>
 
                 <!-- PJ No. (project) -->
-                <div class="form-group">
-                    <label class="form-label"><?= __('pj_no') ?></label>
-                    <select name="project_id" class="form-select">
-                        <option value="">-- <?= _e('select') ?> --</option>
-                        <?php foreach ($projects ?? [] as $p): ?>
-                            <option value="<?= htmlspecialchars($p['project_id']) ?>"
-                                <?= ($order['project_id'] ?? '') == $p['project_id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($p['pj_no']) ?>
-                                <?php if (!empty($p['pj_name'])): ?> — <?= htmlspecialchars(mb_substr($p['pj_name'], 0, 40)) ?><?php endif; ?>
-                                <?php if (!empty($p['customer_name'])): ?> (<?= htmlspecialchars(mb_substr($p['customer_name'], 0, 25)) ?>)<?php endif; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <?= Form::select('project_id', __('pj_no'), $poProjectOptions, [
+                    'value' => $order['project_id'] ?? '',
+                    'none_label' => '-- ' . _e('select') . ' --',
+                ]) ?>
 
-                <div class="form-group form-full">
-                    <label class="form-label"><?= _e('notes') ?></label>
-                    <textarea name="notes" class="form-textarea" rows="2" placeholder="<?= _e('notes') ?>"><?= htmlspecialchars($order['notes'] ?? '') ?></textarea>
-                </div>
+                <?= Form::textarea('notes', _e('notes'), [
+                    'value' => $order['notes'] ?? '',
+                    'rows' => 2,
+                    'placeholder' => _e('notes'),
+                    'group_class' => 'form-full',
+                ]) ?>
             </div>
         </div>
     </div>
